@@ -1,0 +1,1736 @@
+openapi: 3.0.3
+info:
+  title: EM School API
+  description: |
+    School management backend (multi-tenant by school JWT).
+
+    **Base path:** `/api`
+
+    **Auth:** `Authorization: Bearer <JWT>` after login.
+
+    Roles: `admin` | `school` | `teacher` | `parent` | `student` | `manager`
+  version: 0.0.1
+  contact:
+    name: EM School
+
+servers:
+  - url: http://localhost:8000/api
+    description: Local default
+  - url: /api
+    description: Relative (same host)
+
+tags:
+  - name: Auth
+  - name: Admin
+  - name: School — Academic Years
+  - name: School — Students
+  - name: School — Attendance
+  - name: School — Fees
+  - name: School — Grades & Classes
+  - name: School — Subjects
+  - name: School — Teachers
+  - name: School — Teacher Assignments
+  - name: School — Schedule
+  - name: Parent
+  - name: Teacher Portal
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    Skip:
+      name: skip
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    SearchQ:
+      name: q
+      in: query
+      description: Free-text search
+      schema:
+        type: string
+    SchoolId:
+      name: schoolId
+      in: path
+      required: true
+      schema:
+        type: integer
+    YearId:
+      name: yearId
+      in: path
+      required: true
+      schema:
+        type: integer
+    StudentId:
+      name: studentId
+      in: path
+      required: true
+      schema:
+        type: integer
+    GradeId:
+      name: gradeId
+      in: path
+      required: true
+      schema:
+        type: integer
+    ClassId:
+      name: classId
+      in: path
+      required: true
+      schema:
+        type: integer
+    SubjectId:
+      name: subjectId
+      in: path
+      required: true
+      schema:
+        type: integer
+    TeacherId:
+      name: teacherId
+      in: path
+      required: true
+      schema:
+        type: integer
+    AssignmentId:
+      name: assignmentId
+      in: path
+      required: true
+      schema:
+        type: integer
+    SlotId:
+      name: slotId
+      in: path
+      required: true
+      schema:
+        type: integer
+    InstallmentId:
+      name: installmentId
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  schemas:
+    ErrorMessage:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        limit:
+          type: integer
+        skip:
+          type: integer
+        hasMore:
+          type: boolean
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          description: Email, username, or phone
+        password:
+          type: string
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        mustChangePassword:
+          type: boolean
+        user:
+          $ref: '#/components/schemas/AuthUserPublic'
+
+    AuthUserPublic:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          nullable: true
+        role:
+          type: string
+          enum: [admin, school, student, teacher, manager, parent]
+        description:
+          type: string
+          nullable: true
+        logo:
+          type: string
+          nullable: true
+        status:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    ChangePasswordRequest:
+      type: object
+      required: [oldPassword, newPassword]
+      properties:
+        oldPassword:
+          type: string
+        newPassword:
+          type: string
+          minLength: 8
+
+    CreateSchoolRequest:
+      type: object
+      required: [name, email, password, logo]
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        address:
+          type: string
+        contactPhone:
+          type: string
+        logo:
+          type: string
+          format: binary
+          description: Required multipart file field `logo`
+
+    AcademicYearCreate:
+      type: object
+      required: [name, startDate, endDate]
+      properties:
+        name:
+          type: string
+        startDate:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+          example: '2025-09-01'
+        endDate:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+        isCurrent:
+          type: boolean
+
+    AcademicYearUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        startDate:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+        endDate:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+        isCurrent:
+          type: boolean
+
+    StudentCreate:
+      type: object
+      required: [gradeId, parentPhone]
+      description: |
+        JSON or multipart. Require firstName+lastName OR fullName;
+        classroomId OR classId; birthDate/dateOfBirth OR nationalId; gender OR nationalId.
+        Optional files: `avatar`, `birthCertificate`.
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        fullName:
+          type: string
+        gender:
+          type: string
+          enum: [male, female]
+        birthDate:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+        dateOfBirth:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+        nationalId:
+          type: string
+          description: 14-digit Egyptian national ID
+        address:
+          type: string
+          nullable: true
+        studentPhone:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        academicYearId:
+          type: integer
+        gradeId:
+          type: integer
+        classroomId:
+          type: integer
+        classId:
+          type: integer
+        parentName:
+          type: string
+        parentFullName:
+          type: string
+        parentPhone:
+          type: string
+        parentEmail:
+          type: string
+          nullable: true
+        relationship:
+          type: string
+          enum: [father, mother, guardian, other]
+        parentRelation:
+          type: string
+          enum: [father, mother, other]
+        status:
+          type: string
+          enum: [active, suspended, graduated, transferred]
+        password:
+          type: string
+          minLength: 8
+        avatar:
+          type: string
+          format: binary
+        birthCertificate:
+          type: string
+          format: binary
+
+    StudentUpdate:
+      type: object
+      properties:
+        academicYearId:
+          type: integer
+        gradeId:
+          type: integer
+        classroomId:
+          type: integer
+        classId:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        fullName:
+          type: string
+        nationalId:
+          type: string
+          nullable: true
+        birthDate:
+          type: string
+        dateOfBirth:
+          type: string
+        gender:
+          type: string
+          enum: [male, female]
+        address:
+          type: string
+          nullable: true
+        studentPhone:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        parentName:
+          type: string
+        parentPhone:
+          type: string
+          nullable: true
+        parentEmail:
+          type: string
+          nullable: true
+        relationship:
+          type: string
+          enum: [father, mother, guardian, other]
+        status:
+          type: string
+          enum: [active, suspended, graduated, transferred]
+
+    AttendanceScanRequest:
+      type: object
+      required: [raw]
+      properties:
+        raw:
+          type: string
+          description: Raw QR payload scanned from student QR
+
+    GradeCreate:
+      type: object
+      required: [name, stage]
+      properties:
+        name:
+          type: string
+        stage:
+          type: string
+          enum: [primary, preparatory, secondary]
+        description:
+          type: string
+
+    GradeUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        stage:
+          type: string
+          enum: [primary, preparatory, secondary]
+        description:
+          type: string
+          nullable: true
+
+    ClassCreate:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        capacity:
+          type: integer
+          nullable: true
+
+    ClassUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        capacity:
+          type: integer
+          nullable: true
+
+    GradeFeePlanUpsert:
+      type: object
+      required: [totalAmount, installments]
+      properties:
+        totalAmount:
+          type: number
+        installments:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [dueDate, amount]
+            properties:
+              dueDate:
+                type: string
+              amount:
+                type: number
+          description: Sum of installment amounts must equal totalAmount
+
+    SubjectIdsBody:
+      type: object
+      required: [subjectIds]
+      properties:
+        subjectIds:
+          type: array
+          minItems: 1
+          items:
+            type: integer
+
+    TeacherCreate:
+      type: object
+      required: [gender, phone, hireDate]
+      description: Require firstName+lastName OR fullName/name
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        fullName:
+          type: string
+        name:
+          type: string
+        gender:
+          type: string
+          enum: [male, female]
+        phone:
+          type: string
+        hireDate:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+        email:
+          type: string
+          nullable: true
+        nationalId:
+          type: string
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        photo:
+          type: string
+          nullable: true
+        specialization:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [active, suspended]
+        description:
+          type: string
+          nullable: true
+        subjectId:
+          type: integer
+        password:
+          type: string
+          minLength: 8
+
+    TeacherUpdate:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        fullName:
+          type: string
+        name:
+          type: string
+        gender:
+          type: string
+          enum: [male, female]
+        phone:
+          type: string
+        hireDate:
+          type: string
+        email:
+          type: string
+          nullable: true
+        nationalId:
+          type: string
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        photo:
+          type: string
+          nullable: true
+        specialization:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [active, suspended]
+        description:
+          type: string
+          nullable: true
+        subjectId:
+          type: integer
+          nullable: true
+
+    AssignTeacherToClasses:
+      type: object
+      required: [classIds]
+      properties:
+        classIds:
+          type: array
+          minItems: 1
+          items:
+            type: integer
+
+    TeacherAssignmentCreate:
+      type: object
+      required: [academicYearId, teacherId, gradeId, classroomId, subjectId]
+      properties:
+        academicYearId:
+          type: integer
+        teacherId:
+          type: integer
+        gradeId:
+          type: integer
+        classroomId:
+          type: integer
+        subjectId:
+          type: integer
+
+    TeacherAssignmentUpdate:
+      type: object
+      properties:
+        academicYearId:
+          type: integer
+        teacherId:
+          type: integer
+        gradeId:
+          type: integer
+        classroomId:
+          type: integer
+        subjectId:
+          type: integer
+
+    ScheduleSlotCreate:
+      type: object
+      required: [dayOfWeek, period, subjectId, teacherId]
+      properties:
+        dayOfWeek:
+          type: integer
+          minimum: 1
+          maximum: 7
+        period:
+          type: integer
+          minimum: 1
+          maximum: 20
+        subjectId:
+          type: integer
+        teacherId:
+          type: integer
+
+    ScheduleSlotUpdate:
+      type: object
+      properties:
+        dayOfWeek:
+          type: integer
+          minimum: 1
+          maximum: 7
+        period:
+          type: integer
+          minimum: 1
+          maximum: 20
+        subjectId:
+          type: integer
+        teacherId:
+          type: integer
+
+paths:
+  /login:
+    post:
+      tags: [Auth]
+      summary: Unified login (alias of /auth/login)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Unified login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Current user profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mustChangePassword:
+                    type: boolean
+                  user:
+                    $ref: '#/components/schemas/AuthUserPublic'
+        '401':
+          description: Unauthorized
+
+  /auth/password:
+    patch:
+      tags: [Auth]
+      summary: Change own password
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: New token issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  mustChangePassword:
+                    type: boolean
+        '401':
+          description: Wrong current password
+
+  /admin/schools:
+    get:
+      tags: [Admin]
+      summary: List schools
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Skip'
+        - $ref: '#/components/parameters/SearchQ'
+      responses:
+        '200':
+          description: OK
+        '403':
+          description: Admin only
+    post:
+      tags: [Admin]
+      summary: Create school (multipart + logo; issues registration code)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateSchoolRequest'
+      responses:
+        '201':
+          description: Created
+        '400':
+          description: Logo required or validation error
+
+  /admin/schools/{schoolId}:
+    get:
+      tags: [Admin]
+      summary: Get school details
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SchoolId'
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Not found
+    put:
+      tags: [Admin]
+      summary: Update school profile
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SchoolId'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                email:
+                  type: string
+                address:
+                  type: string
+                contactPhone:
+                  type: string
+                logo:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: OK
+
+  /admin/schools/{schoolId}/status:
+    patch:
+      tags: [Admin]
+      summary: activate | suspend | soft-delete
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SchoolId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [activate, suspend, soft-delete]
+      responses:
+        '200':
+          description: OK
+
+  /admin/schools/{schoolId}/registration-code:
+    post:
+      tags: [Admin]
+      summary: Ensure registration code
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SchoolId'
+      responses:
+        '200':
+          description: Existing
+        '201':
+          description: Created
+
+  /admin/schools/{schoolId}/registration-code/regenerate:
+    post:
+      tags: [Admin]
+      summary: Regenerate registration code
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SchoolId'
+      responses:
+        '201':
+          description: New code
+
+  /admin/dashboard:
+    get:
+      tags: [Admin]
+      summary: Super Admin dashboard
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+
+  /school/academic-years:
+    get:
+      tags: [School — Academic Years]
+      summary: List academic years
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Skip'
+      responses:
+        '200':
+          description: OK
+    post:
+      tags: [School — Academic Years]
+      summary: Create academic year
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcademicYearCreate'
+      responses:
+        '201':
+          description: Created
+
+  /school/academic-years/{yearId}:
+    get:
+      tags: [School — Academic Years]
+      summary: Get academic year
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/YearId'
+      responses:
+        '200':
+          description: OK
+    put:
+      tags: [School — Academic Years]
+      summary: Update academic year
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/YearId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcademicYearUpdate'
+      responses:
+        '200':
+          description: OK
+    delete:
+      tags: [School — Academic Years]
+      summary: Delete academic year
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/YearId'
+      responses:
+        '204':
+          description: Deleted
+
+  /school/students:
+    get:
+      tags: [School — Students]
+      summary: List students
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Skip'
+        - $ref: '#/components/parameters/SearchQ'
+        - name: classroomId
+          in: query
+          schema:
+            type: integer
+        - name: classId
+          in: query
+          schema:
+            type: integer
+          description: Alias of classroomId
+        - name: gradeId
+          in: query
+          schema:
+            type: integer
+        - name: academicYearId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, suspended, graduated, transferred]
+        - name: studentCode
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+    post:
+      tags: [School — Students]
+      summary: Enroll / create student
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StudentCreate'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentCreate'
+      responses:
+        '201':
+          description: Created
+
+  /school/students/{studentId}:
+    get:
+      tags: [School — Students]
+      summary: Get student
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/StudentId'
+      responses:
+        '200':
+          description: OK
+    put:
+      tags: [School — Students]
+      summary: Update student
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/StudentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentUpdate'
+      responses:
+        '200':
+          description: OK
+    patch:
+      tags: [School — Students]
+      summary: Update student (partial)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/StudentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentUpdate'
+      responses:
+        '200':
+          description: OK
+    delete:
+      tags: [School — Students]
+      summary: Delete student
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/StudentId'
+      responses:
+        '204':
+          description: Deleted
+
+  /school/students/{studentId}/fees:
+    get:
+      tags: [School — Fees]
+      summary: Student fees & installments
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/StudentId'
+      responses:
+        '200':
+          description: OK
+
+  /school/students/{studentId}/qr:
+    get:
+      tags: [School — Students]
+      summary: Student QR (JSON data URL or PNG)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/StudentId'
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [json, png]
+            default: json
+      responses:
+        '200':
+          description: JSON with qrDataUrl or raw PNG
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  qrDataUrl:
+                    type: string
+                  qrPayload:
+                    type: string
+                  student:
+                    type: object
+            image/png:
+              schema:
+                type: string
+                format: binary
+
+  /school/students/{studentId}/attendance-days:
+    get:
+      tags: [School — Attendance]
+      summary: Present-days summary for a student
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/StudentId'
+        - name: from
+          in: query
+          schema:
+            type: string
+        - name: to
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+
+  /school/attendance/scan:
+    post:
+      tags: [School — Attendance]
+      summary: Record attendance from QR scan
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttendanceScanRequest'
+      responses:
+        '201':
+          description: Recorded
+
+  /school/attendance:
+    get:
+      tags: [School — Attendance]
+      summary: List school attendance
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Skip'
+        - name: from
+          in: query
+          schema:
+            type: string
+        - name: to
+          in: query
+          schema:
+            type: string
+        - name: studentId
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+
+  /school/installments/{installmentId}/pay:
+    post:
+      tags: [School — Fees]
+      summary: Mark installment as paid
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/InstallmentId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  feeId:
+                    type: integer
+                  studentId:
+                    type: integer
+
+  /school/grades:
+    get:
+      tags: [School — Grades & Classes]
+      summary: List grades
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Skip'
+      responses:
+        '200':
+          description: OK
+    post:
+      tags: [School — Grades & Classes]
+      summary: Create grade
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GradeCreate'
+      responses:
+        '201':
+          description: Created
+
+  /school/grades/{gradeId}:
+    get:
+      tags: [School — Grades & Classes]
+      summary: Get grade
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GradeId'
+      responses:
+        '200':
+          description: OK
+    patch:
+      tags: [School — Grades & Classes]
+      summary: Update grade
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GradeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GradeUpdate'
+      responses:
+        '200':
+          description: OK
+    delete:
+      tags: [School — Grades & Classes]
+      summary: Delete grade
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GradeId'
+      responses:
+        '204':
+          description: Deleted
+
+  /school/grades/{gradeId}/fee-plan:
+    get:
+      tags: [School — Fees]
+      summary: Get grade fee plan
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GradeId'
+      responses:
+        '200':
+          description: OK
+    put:
+      tags: [School — Fees]
+      summary: Upsert grade fee plan
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GradeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GradeFeePlanUpsert'
+      responses:
+        '200':
+          description: OK
+
+  /school/grades/{gradeId}/classes:
+    get:
+      tags: [School — Grades & Classes]
+      summary: List classes in grade
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GradeId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Skip'
+      responses:
+        '200':
+          description: OK
+    post:
+      tags: [School — Grades & Classes]
+      summary: Create class in grade
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GradeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassCreate'
+      responses:
+        '201':
+          description: Created
+
+  /school/classes/{classId}:
+    get:
+      tags: [School — Grades & Classes]
+      summary: Get class
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ClassId'
+      responses:
+        '200':
+          description: OK
+    patch:
+      tags: [School — Grades & Classes]
+      summary: Update class
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ClassId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassUpdate'
+      responses:
+        '200':
+          description: OK
+    delete:
+      tags: [School — Grades & Classes]
+      summary: Delete class
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ClassId'
+      responses:
+        '204':
+          description: Deleted
+
+  /school/subjects:
+    get:
+      tags: [School — Subjects]
+      summary: List global subjects
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Skip'
+        - $ref: '#/components/parameters/SearchQ'
+      responses:
+        '200':
+          description: OK
+
+  /school/subjects/{subjectId}:
+    get:
+      tags: [School — Subjects]
+      summary: Get subject
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SubjectId'
+      responses:
+        '200':
+          description: OK
+
+  /school/classes/{classId}/subjects:
+    get:
+      tags: [School — Subjects]
+      summary: List subjects for class
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ClassId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Skip'
+      responses:
+        '200':
+          description: OK
+    post:
+      tags: [School — Subjects]
+      summary: Add subjects to class
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ClassId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubjectIdsBody'
+      responses:
+        '201':
+          description: Added
+    put:
+      tags: [School — Subjects]
+      summary: Replace class subjects
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ClassId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubjectIdsBody'
+      responses:
+        '200':
+          description: Updated
+
+  /school/teachers:
+    get:
+      tags: [School — Teachers]
+      summary: List teachers
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Skip'
+        - $ref: '#/components/parameters/SearchQ'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, suspended]
+      responses:
+        '200':
+          description: OK
+    post:
+      tags: [School — Teachers]
+      summary: Create teacher
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherCreate'
+      responses:
+        '201':
+          description: Created
+
+  /school/teachers/{teacherId}:
+    get:
+      tags: [School — Teachers]
+      summary: Get teacher
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TeacherId'
+      responses:
+        '200':
+          description: OK
+    put:
+      tags: [School — Teachers]
+      summary: Update teacher
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TeacherId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherUpdate'
+      responses:
+        '200':
+          description: OK
+    patch:
+      tags: [School — Teachers]
+      summary: Update teacher (partial)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TeacherId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherUpdate'
+      responses:
+        '200':
+          description: OK
+    delete:
+      tags: [School — Teachers]
+      summary: Delete teacher
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TeacherId'
+      responses:
+        '204':
+          description: Deleted
+
+  /school/teachers/{teacherId}/classes:
+    get:
+      tags: [School — Teachers]
+      summary: Classes assigned to teacher (legacy)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TeacherId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Skip'
+      responses:
+        '200':
+          description: OK
+    post:
+      tags: [School — Teachers]
+      summary: Assign teacher to classes (legacy)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TeacherId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignTeacherToClasses'
+      responses:
+        '201':
+          description: Assigned
+
+  /school/teachers/{teacherId}/classes/{classId}:
+    delete:
+      tags: [School — Teachers]
+      summary: Remove teacher from class (legacy)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TeacherId'
+        - $ref: '#/components/parameters/ClassId'
+      responses:
+        '204':
+          description: Removed
+
+  /school/classes/{classId}/teachers:
+    get:
+      tags: [School — Teachers]
+      summary: Teachers for a class (legacy)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ClassId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Skip'
+      responses:
+        '200':
+          description: OK
+
+  /school/teacher-assignments:
+    get:
+      tags: [School — Teacher Assignments]
+      summary: List teacher assignments (subject + class + grade + year)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Skip'
+        - $ref: '#/components/parameters/SearchQ'
+        - name: teacherId
+          in: query
+          schema:
+            type: integer
+        - name: academicYearId
+          in: query
+          schema:
+            type: integer
+        - name: gradeId
+          in: query
+          schema:
+            type: integer
+        - name: classroomId
+          in: query
+          schema:
+            type: integer
+        - name: subjectId
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+    post:
+      tags: [School — Teacher Assignments]
+      summary: Create teacher assignment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherAssignmentCreate'
+      responses:
+        '201':
+          description: Created
+
+  /school/teacher-assignments/{assignmentId}:
+    get:
+      tags: [School — Teacher Assignments]
+      summary: Get assignment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AssignmentId'
+      responses:
+        '200':
+          description: OK
+    put:
+      tags: [School — Teacher Assignments]
+      summary: Update assignment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AssignmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherAssignmentUpdate'
+      responses:
+        '200':
+          description: OK
+    delete:
+      tags: [School — Teacher Assignments]
+      summary: Delete assignment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AssignmentId'
+      responses:
+        '204':
+          description: Deleted
+
+  /school/classes/{classId}/schedule:
+    get:
+      tags: [School — Schedule]
+      summary: List class schedule
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ClassId'
+        - name: dayOfWeek
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 7
+      responses:
+        '200':
+          description: OK
+
+  /school/classes/{classId}/schedule/slots:
+    post:
+      tags: [School — Schedule]
+      summary: Create schedule slot
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ClassId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleSlotCreate'
+      responses:
+        '201':
+          description: Created
+
+  /school/classes/{classId}/schedule/slots/{slotId}:
+    patch:
+      tags: [School — Schedule]
+      summary: Update schedule slot
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ClassId'
+        - $ref: '#/components/parameters/SlotId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleSlotUpdate'
+      responses:
+        '200':
+          description: OK
+    delete:
+      tags: [School — Schedule]
+      summary: Delete schedule slot
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ClassId'
+        - $ref: '#/components/parameters/SlotId'
+      responses:
+        '204':
+          description: Deleted
+
+  /parent/attendance:
+    get:
+      tags: [Parent]
+      summary: List attendance for parent's children
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Skip'
+        - name: studentId
+          in: query
+          schema:
+            type: integer
+        - name: from
+          in: query
+          schema:
+            type: string
+        - name: to
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '403':
+          description: Parent role required
+
+  /teacher/me:
+    get:
+      tags: [Teacher Portal]
+      summary: Current teacher profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+        '403':
+          description: Teacher role required
+
+  /teacher/assignments:
+    get:
+      tags: [Teacher Portal]
+      summary: My teaching assignments
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+        '403':
+          description: Teacher role required

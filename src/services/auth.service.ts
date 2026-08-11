@@ -9,7 +9,11 @@ export async function loginWithUsernamePassword(username: string, password: stri
     throw new HttpError(401, 'Invalid credentials');
   }
 
-  if (user.status === 'inactive') {
+  if (
+    user.status === 'inactive' ||
+    user.status === 'suspended' ||
+    user.status === 'deleted'
+  ) {
     throw new HttpError(403, 'Account is deactivated.');
   }
 

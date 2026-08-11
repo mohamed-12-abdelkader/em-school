@@ -27,11 +27,13 @@ export async function createSchool(req: Request, res: Response) {
     throw new HttpError(400, 'Logo file is required (field name: logo)');
   }
 
-  const { name, description, email, password } = req.body as {
+  const { name, description, email, password, address, contactPhone } = req.body as {
     name: string;
     description?: string;
     email: string;
     password: string;
+    address?: string;
+    contactPhone?: string;
   };
 
   const school = await schoolService.createSchoolAccount({
@@ -40,7 +42,56 @@ export async function createSchool(req: Request, res: Response) {
     email,
     password,
     logoFilePath: req.file.path,
+    address: address ?? null,
+    contactPhone: contactPhone ?? null,
   });
 
   res.status(201).json({ school });
+}
+
+export async function updateSchool(req: Request, res: Response) {
+  const schoolId = parsePositiveIntParam(req.params.schoolId, 'schoolId');
+  const body = req.body as {
+    name?: string;
+    description?: string | null;
+    email?: string;
+    address?: string | null;
+    contactPhone?: string | null;
+  };
+
+  if (!req.file && Object.keys(body).length === 0) {
+    throw new HttpError(400, 'At least one field is required');
+  }
+
+  const school = await schoolService.updateSchoolForAdmin(schoolId, {
+    ...body,
+    logoFilePath: req.file?.path,
+  });
+  res.json({ school });
+}
+
+export async function updateSchoolStatus(req: Request, res: Response) {
+  const schoolId = parsePositiveIntParam(req.params.schoolId, 'schoolId');
+  const { action } = req.body as {
+    action: 'activate' | 'suspend' | 'soft-delete';
+  };
+  const school = await schoolService.updateSchoolStatusForAdmin(schoolId, action);
+  res.json({ school });
+}
+
+export async function createRegistrationCode(req: Request, res: Response) {
+  const schoolId = parsePositiveIntParam(req.params.schoolId, 'schoolId');
+  const result = await schoolService.ensureRegistrationCode(schoolId);
+  res.status(result.created ? 201 : 200).json({ registrationCode: result.registrationCode });
+}
+
+export async function regenerateRegistrationCode(req: Request, res: Response) {
+  const schoolId = parsePositiveIntParam(req.params.schoolId, 'schoolId');
+  const registrationCode = await schoolService.regenerateRegistrationCode(schoolId);
+  res.status(201).json({ registrationCode });
+}
+
+export async function getDashboard(_req: Request, res: Response) {
+  const result = await schoolService.getAdminDashboard();
+  res.json(result);
 }
