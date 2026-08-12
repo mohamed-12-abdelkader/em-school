@@ -13,21 +13,32 @@ export function authMiddleware(allowedRoles: AppRole[] = []): RequestHandler {
       const decoded = jwt.verify(token, config.SECRET_KEY) as { id: number; jti?: string };
       const { id, jti } = decoded;
 
-      const result = await pool.query<AuthUser>(
-        'SELECT id, role, email, jti FROM users WHERE id = $1',
-        [id],
-      );
+      const result = await pool.query<{
+        id: number;
+        role: AppRole;
+        email: string | null;
+        jti: string | null;
+        school_id: number | null;
+      }>('SELECT id, role, email, jti, school_id FROM users WHERE id = $1', [id]);
       if (!result.rowCount) return res.status(401).json({ message: 'User not found' });
 
-      const user = result.rows[0];
+      const row = result.rows[0];
 
-      if (allowedRoles.length && !allowedRoles.includes(user.role)) {
+      if (allowedRoles.length && !allowedRoles.includes(row.role)) {
         return res.status(403).json({ message: 'Forbidden: insufficient role' });
       }
 
-      if (user.role === 'student' && user.jti !== jti) {
+      if (row.role === 'student' && row.jti !== jti) {
         return res.status(401).json({ message: 'Session expired or replaced' });
       }
+
+      const user: AuthUser = {
+        id: row.id,
+        role: row.role,
+        email: row.email,
+        jti: row.jti,
+        schoolId: row.school_id,
+      };
 
       req.user = user;
       next();

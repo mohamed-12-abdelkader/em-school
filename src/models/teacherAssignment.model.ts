@@ -220,12 +220,7 @@ export async function hasActiveAssignment(input: {
   academicYearId?: number;
   excludeAssignmentId?: number;
 }): Promise<boolean> {
-  const values: unknown[] = [
-    input.schoolId,
-    input.teacherId,
-    input.classroomId,
-    input.subjectId,
-  ];
+  const values: unknown[] = [input.schoolId, input.teacherId, input.classroomId, input.subjectId];
   let sql = `
     SELECT 1
     FROM teacher_assignments

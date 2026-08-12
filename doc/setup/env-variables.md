@@ -3,11 +3,13 @@
 ## Required Environment Variables
 
 ### Database
+
 ```env
 DATABASE_URL=postgresql://username:password@localhost:5432/school_systems
 ```
 
 ### Server Configuration
+
 ```env
 NODE_ENV=development
 CORS_ORIGIN=http://localhost:3000
@@ -16,18 +18,21 @@ SECRET_KEY=your-secret-key-here
 ```
 
 ### Admin Account
+
 ```env
 FIRST_SUPERUSER=admin@example.com
 FIRST_SUPERUSER_PASSWORD=admin123456
 ```
 
 ### Manager Account
+
 ```env
 MANAGER_EMAIL=manager@example.com
 MANAGER_PASSWORD=manager123456
 ```
 
 ### Email Configuration (Optional)
+
 ```env
 SMTP_HOST=smtp.gmail.com
 SMTP_USER=your-email@gmail.com
@@ -40,6 +45,7 @@ EMAILS_FROM_NAME=School Systems
 ```
 
 ### CDN (Optional)
+
 ```env
 CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name
 ```
@@ -80,10 +86,8 @@ Both will return the same response format with their respective roles:
     "name": "Admin/Manager",
     "email": "admin@example.com",
     "phone": null,
-    "role": "admin"  // or "manger"
+    "role": "admin" // or "manger"
   },
   "token": "JWT_TOKEN"
 }
 ```
-
-

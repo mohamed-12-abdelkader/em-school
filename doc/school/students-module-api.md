@@ -11,12 +11,12 @@ Auth: `Authorization: Bearer <token>` مع `role = school`
 
 ## السنة الدراسية (مطلوبة قبل إنشاء طالب)
 
-| Method | Path | الوصف |
-|--------|------|--------|
-| GET | `/academic-years` | قائمة + pagination |
-| POST | `/academic-years` | إنشاء |
-| GET | `/academic-years/:yearId` | تفاصيل |
-| PUT | `/academic-years/:yearId` | تعديل |
+| Method | Path                      | الوصف                    |
+| ------ | ------------------------- | ------------------------ |
+| GET    | `/academic-years`         | قائمة + pagination       |
+| POST   | `/academic-years`         | إنشاء                    |
+| GET    | `/academic-years/:yearId` | تفاصيل                   |
+| PUT    | `/academic-years/:yearId` | تعديل                    |
 | DELETE | `/academic-years/:yearId` | حذف (مرفوض إن وُجد طلاب) |
 
 **POST body**
@@ -34,30 +34,31 @@ Auth: `Authorization: Bearer <token>` مع `role = school`
 
 ## الطلاب
 
-| Method | Path | الوصف |
-|--------|------|--------|
-| GET | `/students` | قائمة مع بحث/فلاتر/pagination |
-| GET | `/students/:studentId` | طالب + علاقات (سنة/صف/فصل/ولي أمر) |
-| POST | `/students` | إنشاء (JSON أو multipart) |
-| PUT | `/students/:studentId` | تعديل |
-| PATCH | `/students/:studentId` | نفس التعديل (توافق) |
-| DELETE | `/students/:studentId` | Soft delete (`deleted_at`) |
+| Method | Path                   | الوصف                              |
+| ------ | ---------------------- | ---------------------------------- |
+| GET    | `/students`            | قائمة مع بحث/فلاتر/pagination      |
+| GET    | `/students/:studentId` | طالب + علاقات (سنة/صف/فصل/ولي أمر) |
+| POST   | `/students`            | إنشاء (JSON أو multipart)          |
+| PUT    | `/students/:studentId` | تعديل                              |
+| PATCH  | `/students/:studentId` | نفس التعديل (توافق)                |
+| DELETE | `/students/:studentId` | Soft delete (`deleted_at`)         |
 
 ### Query params (GET list)
 
-| Param | الوصف |
-|-------|--------|
-| `q` | بحث بالاسم / الرقم القومي / هاتف ولي الأمر |
-| `studentCode` | بحث بكود الطالب |
-| `gradeId` | فلتر الصف |
-| `classroomId` أو `classId` | فلتر الفصل |
-| `academicYearId` | فلتر السنة |
-| `status` | `active` \| `suspended` \| `graduated` \| `transferred` |
-| `limit` / `skip` | Pagination (افتراضي 20، حد 100) |
+| Param                      | الوصف                                                   |
+| -------------------------- | ------------------------------------------------------- |
+| `q`                        | بحث بالاسم / الرقم القومي / هاتف ولي الأمر              |
+| `studentCode`              | بحث بكود الطالب                                         |
+| `gradeId`                  | فلتر الصف                                               |
+| `classroomId` أو `classId` | فلتر الفصل                                              |
+| `academicYearId`           | فلتر السنة                                              |
+| `status`                   | `active` \| `suspended` \| `graduated` \| `transferred` |
+| `limit` / `skip`           | Pagination (افتراضي 20، حد 100)                         |
 
 ### POST — إنشاء طالب
 
 **Validation قبل الإدراج**
+
 - السنة الدراسية تخص المدرسة
 - الصف يخص المدرسة
 - الفصل يخص المدرسة ويتبع الصف

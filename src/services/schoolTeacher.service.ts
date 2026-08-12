@@ -256,7 +256,10 @@ export async function assignTeacherToClasses(
   const teacher = await teacherModel.findByIdAndSchool(teacherId, schoolId);
   if (!teacher) throw new HttpError(404, 'Teacher not found');
   if (!teacher.subject_id) {
-    throw new HttpError(400, 'legacy subjectId مطلوب على المدرس لاستخدام هذا المسار؛ استخدم teacher-assignments');
+    throw new HttpError(
+      400,
+      'legacy subjectId مطلوب على المدرس لاستخدام هذا المسار؛ استخدم teacher-assignments',
+    );
   }
 
   for (const classId of classIds) {

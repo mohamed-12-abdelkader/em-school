@@ -16,6 +16,7 @@
   - `image` (اختياري: ملف صورة من الجهاز)
 
 مثال cURL:
+
 ```bash
 curl -X POST https://your-host/api/courses \
   -H "Authorization: Bearer <ADMIN_TOKEN>" \
@@ -27,6 +28,7 @@ curl -X POST https://your-host/api/courses \
 ```
 
 Response 201:
+
 ```json
 {
   "course": {
@@ -50,16 +52,26 @@ Response 201:
   - `grade_id` (اختياري لتصفية الكورسات حسب الصف الدراسي)
 
 مثال cURL:
+
 ```bash
 curl -X GET "https://your-host/api/courses?limit=10&skip=0&grade_id=4" \
   -H "Authorization: Bearer <ADMIN_TOKEN>"
 ```
 
 Response 200:
+
 ```json
 {
   "courses": [
-    { "id": 1, "title": "Physics 101", "description": "Intro...", "price": 199.99, "grade_id": 4, "image_url": "https://...", "created_at": "..." }
+    {
+      "id": 1,
+      "title": "Physics 101",
+      "description": "Intro...",
+      "price": 199.99,
+      "grade_id": 4,
+      "image_url": "https://...",
+      "created_at": "..."
+    }
   ]
 }
 ```
@@ -71,6 +83,7 @@ Response 200:
 - الحقول (اختيارية): `title`, `description`, `price`, `grade_id`, `image`
 
 مثال cURL:
+
 ```bash
 curl -X PUT https://your-host/api/courses/1 \
   -H "Authorization: Bearer <ADMIN_TOKEN>" \
@@ -80,8 +93,18 @@ curl -X PUT https://your-host/api/courses/1 \
 ```
 
 Response 200:
+
 ```json
-{ "course": { "id": 1, "title": "Physics Basics", "price": 149.99, "grade_id": 4, "image_url": "https://...", "created_at": "..." } }
+{
+  "course": {
+    "id": 1,
+    "title": "Physics Basics",
+    "price": 149.99,
+    "grade_id": 4,
+    "image_url": "https://...",
+    "created_at": "..."
+  }
+}
 ```
 
 ### عرض تفاصيل الكورس
@@ -90,6 +113,7 @@ Response 200:
 - المصادقة: `admin` (جميع الكورسات) أو `student` (الكورسات المسجل فيها فقط)
 
 مثال cURL:
+
 ```bash
 # للادمن
 curl -X GET https://your-host/api/courses/1 \
@@ -101,6 +125,7 @@ curl -X GET https://your-host/api/courses/1 \
 ```
 
 Response 200:
+
 ```json
 {
   "course": {
@@ -146,11 +171,13 @@ Response 200:
 ```
 
 Response 403 (للطالب غير المسجل):
+
 ```json
 { "message": "Access denied. You must be enrolled in this course." }
 ```
 
 Response 404:
+
 ```json
 { "message": "Course not found" }
 ```
@@ -162,6 +189,7 @@ Response 404:
   - `count` (رقم، اختياري): عدد الأكواد المطلوب إنشاؤها (افتراضي: 1، حد أقصى: 100)
 
 مثال cURL:
+
 ```bash
 # إنشاء كود واحد
 curl -X POST https://your-host/api/courses/1/invite-codes \
@@ -177,6 +205,7 @@ curl -X POST https://your-host/api/courses/1/invite-codes \
 ```
 
 Response 201:
+
 ```json
 {
   "message": "Generated 5 invite code(s) for course",
@@ -195,12 +224,14 @@ Response 201:
 - GET `/courses/:id/invite-codes`
 
 مثال cURL:
+
 ```bash
 curl -X GET https://your-host/api/courses/1/invite-codes \
   -H "Authorization: Bearer <ADMIN_TOKEN>"
 ```
 
 Response 200:
+
 ```json
 {
   "invite_codes": [
@@ -223,6 +254,7 @@ Response 200:
 - DELETE `/courses/invite-codes/:codeId`
 
 مثال cURL:
+
 ```bash
 curl -X DELETE https://your-host/api/courses/invite-codes/1 \
   -H "Authorization: Bearer <ADMIN_TOKEN>"
@@ -238,12 +270,14 @@ Response 204: بدون محتوى
   - `skip` (اختياري): عدد الطلاب المراد تخطيها (افتراضي: 0)
 
 مثال cURL:
+
 ```bash
 curl -X GET "https://your-host/api/courses/1/students?limit=20&skip=0" \
   -H "Authorization: Bearer <ADMIN_TOKEN>"
 ```
 
 Response 200:
+
 ```json
 {
   "course": {
@@ -272,12 +306,14 @@ Response 200:
 - DELETE `/courses/:id/students/:studentId`
 
 مثال cURL:
+
 ```bash
 curl -X DELETE https://your-host/api/courses/1/students/5 \
   -H "Authorization: Bearer <ADMIN_TOKEN>"
 ```
 
 Response 200:
+
 ```json
 {
   "message": "Student removed from course successfully",
@@ -293,6 +329,7 @@ Response 200:
 ```
 
 Response 404 (طالب غير موجود أو غير مشترك):
+
 ```json
 { "message": "Student not found or not enrolled in this course" }
 ```
@@ -302,11 +339,10 @@ Response 404 (طالب غير موجود أو غير مشترك):
 - DELETE `/courses/:id`
 
 مثال cURL:
+
 ```bash
 curl -X DELETE https://your-host/api/courses/1 \
   -H "Authorization: Bearer <ADMIN_TOKEN>"
 ```
 
 Response 204: بدون محتوى
-
-

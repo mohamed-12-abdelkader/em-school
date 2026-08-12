@@ -44,7 +44,7 @@ import { upsertGradeFeePlanSchema } from '../validators/gradeFeePlan.validator';
 
 const router = Router();
 
-router.use(authMiddleware(['school']));
+router.use(authMiddleware(['school_admin', 'school']));
 
 // Academic years
 router.get('/academic-years', asyncWrapper(academicYearController.listAcademicYears));
@@ -59,10 +59,7 @@ router.put(
   validate(updateAcademicYearSchema),
   asyncWrapper(academicYearController.updateAcademicYear),
 );
-router.delete(
-  '/academic-years/:yearId',
-  asyncWrapper(academicYearController.deleteAcademicYear),
-);
+router.delete('/academic-years/:yearId', asyncWrapper(academicYearController.deleteAcademicYear));
 
 // Students (شؤون الطلاب)
 router.get('/students', asyncWrapper(studentController.listStudents));

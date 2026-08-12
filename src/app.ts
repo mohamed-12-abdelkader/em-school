@@ -12,8 +12,7 @@ const allowAllOrigins = allowedOrigins.includes('*');
 
 const corsOptionsDelegate: CorsOptionsDelegate<Request> = (req, callback) => {
   const requestOrigin = req.header('Origin') || '';
-  const isAllowed =
-    allowAllOrigins || !requestOrigin || allowedOrigins.includes(requestOrigin);
+  const isAllowed = allowAllOrigins || !requestOrigin || allowedOrigins.includes(requestOrigin);
 
   callback(null, {
     // `true` reflects the request Origin (required when credentials: true; `*` is invalid with credentials)

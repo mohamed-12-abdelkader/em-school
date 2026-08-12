@@ -24,6 +24,7 @@ export async function me(req: Request, res: Response) {
       description: row.description,
       logo: row.logo,
       status: row.status,
+      schoolId: row.school_id,
       created_at: row.created_at,
     },
   });

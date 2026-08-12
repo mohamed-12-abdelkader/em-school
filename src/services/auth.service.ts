@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import type { Pool } from 'pg';
 import * as userModel from '../models/user.model';
+import * as schoolModel from '../models/school.model';
 import { HttpError, generateToken } from '../utils';
 
 export async function loginWithUsernamePassword(username: string, password: string, pool: Pool) {
@@ -9,12 +10,15 @@ export async function loginWithUsernamePassword(username: string, password: stri
     throw new HttpError(401, 'Invalid credentials');
   }
 
-  if (
-    user.status === 'inactive' ||
-    user.status === 'suspended' ||
-    user.status === 'deleted'
-  ) {
+  if (user.status === 'inactive' || user.status === 'suspended' || user.status === 'deleted') {
     throw new HttpError(403, 'Account is deactivated.');
+  }
+
+  if (user.role === 'school_admin' && user.school_id) {
+    const school = await schoolModel.findById(user.school_id);
+    if (!school || school.status === 'suspended' || school.status === 'deleted') {
+      throw new HttpError(403, 'School account is deactivated.');
+    }
   }
 
   const valid = await bcrypt.compare(password, user.password);
@@ -42,6 +46,7 @@ export async function loginWithUsernamePassword(username: string, password: stri
       role: user.role,
       description: user.description,
       logo: user.logo,
+      schoolId: user.school_id,
     },
   };
 }

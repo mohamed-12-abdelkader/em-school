@@ -1,10 +1,13 @@
 # نظام المسابقات - API Documentation
 
 ## نظرة عامة
+
 نظام المسابقات يسمح للأدمن بإنشاء وإدارة المسابقات للطلاب المسجلين لديه، مع إمكانية ربط المسابقات بصفوف محددة.
 
 ## الجداول
+
 ### جدول المسابقات (contests)
+
 - `id`: معرف فريد للمسابقة
 - `title`: عنوان المسابقة (مطلوب)
 - `description`: وصف المسابقة (اختياري)
@@ -17,21 +20,25 @@
 ## API Endpoints
 
 ### 1. إنشاء مسابقة جديدة (للأدمن)
+
 **POST** `/api/contests`
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 Content-Type: multipart/form-data
 ```
 
 **Body (Form Data):**
+
 - `title` (string, required): عنوان المسابقة
 - `description` (string, optional): وصف المسابقة
 - `image` (file, optional): صورة المسابقة (JPEG, PNG, GIF - حد أقصى 5MB)
 - `grade_id` (number, required): معرف الصف
 
 **Response:**
+
 ```json
 {
   "message": "تم إنشاء المسابقة بنجاح",
@@ -49,14 +56,17 @@ Content-Type: multipart/form-data
 ```
 
 ### 2. عرض جميع مسابقات الأدمن
+
 **GET** `/api/contests/admin`
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 {
   "contests": [
@@ -76,14 +86,17 @@ Authorization: Bearer <token>
 ```
 
 ### 3. عرض مسابقة واحدة (للأدمن)
+
 **GET** `/api/contests/admin/:id`
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 {
   "contest": {
@@ -101,21 +114,25 @@ Authorization: Bearer <token>
 ```
 
 ### 4. تحديث مسابقة (للأدمن)
+
 **PUT** `/api/contests/admin/:id`
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 Content-Type: multipart/form-data
 ```
 
 **Body (Form Data):**
+
 - `title` (string, optional): عنوان المسابقة
 - `description` (string, optional): وصف المسابقة
 - `image` (file, optional): صورة جديدة للمسابقة
 - `grade_id` (number, optional): معرف الصف
 
 **Response:**
+
 ```json
 {
   "message": "تم تحديث المسابقة بنجاح",
@@ -133,14 +150,17 @@ Content-Type: multipart/form-data
 ```
 
 ### 5. حذف مسابقة (للأدمن)
+
 **DELETE** `/api/contests/admin/:id`
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 {
   "message": "تم حذف المسابقة بنجاح"
@@ -148,14 +168,17 @@ Authorization: Bearer <token>
 ```
 
 ### 6. استرجاع المسابقات للطلاب
+
 **GET** `/api/contests/student`
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 {
   "contests": [
@@ -177,15 +200,18 @@ Authorization: Bearer <token>
 ## ملاحظات مهمة
 
 ### للطلاب:
+
 - الطلاب يرون فقط مسابقات الأدمن المسجلين لديه
 - بالإضافة إلى مسابقات الصف الخاص بهم (إذا كانوا مسجلين في صف)
 
 ### للأدمن:
+
 - يمكن للأدمن إنشاء مسابقات لطلابه فقط
 - يمكن ربط المسابقة بصف محدد
 - يمكن رفع صورة للمسابقة (اختياري)
 
 ### رفع الصور:
+
 - أنواع الملفات المدعومة: JPEG, JPG, PNG, GIF
 - الحد الأقصى لحجم الملف: 5MB
 - **إذا كان Cloudinary مُكوّن**: الصور تُرفع إلى Cloudinary تلقائياً
@@ -195,6 +221,7 @@ Authorization: Bearer <token>
 - الصور تُحذف تلقائياً عند حذف المسابقة
 
 ### الأخطاء الشائعة:
+
 - `401`: غير مصرح بالوصول (مطلوب تسجيل دخول)
 - `403`: ممنوع (مطلوب دور أدمن للعمليات الإدارية)
 - `400`: بيانات غير صحيحة
@@ -202,6 +229,7 @@ Authorization: Bearer <token>
 - `500`: خطأ في الخادم
 
 ## تشغيل Migration
+
 ```bash
 npm run migrate
 ```
@@ -211,6 +239,7 @@ npm run migrate
 ## تكوين Cloudinary (اختياري)
 
 ### إذا كنت تريد استخدام Cloudinary:
+
 أضف هذه المتغيرات إلى ملف `.env`:
 
 ```env
@@ -222,6 +251,7 @@ CLOUDINARY_API_SECRET=your_api_secret
 يمكنك الحصول على هذه القيم من [Cloudinary Dashboard](https://cloudinary.com/console).
 
 ### إذا لم تكن تريد استخدام Cloudinary:
+
 - الصور ستُحفظ محلياً في مجلد `uploads/`
 - لا حاجة لإضافة متغيرات Cloudinary
 - النظام سيعمل بشكل طبيعي مع التخزين المحلي
@@ -233,6 +263,7 @@ CLOUDINARY_API_SECRET=your_api_secret
 - **يحتاج إلى token صحيح للتحقق من الهوية**
 
 **مثال على الاختبار:**
+
 ```bash
 GET http://localhost:8000/api/contests/admin
 Authorization: Bearer <admin_token>

@@ -28,7 +28,10 @@ export const createTeacherSchema = z
     email: z.union([z.string().trim().email(), z.literal(''), z.null()]).optional(),
     nationalId: z
       .union([
-        z.string().trim().regex(/^\d{14}$/, { message: 'الرقم القومي 14 رقمًا' }),
+        z
+          .string()
+          .trim()
+          .regex(/^\d{14}$/, { message: 'الرقم القومي 14 رقمًا' }),
         z.literal(''),
         z.null(),
       ])
@@ -64,7 +67,14 @@ export const updateTeacherSchema = z
     hireDate: dateString.optional(),
     email: z.union([z.string().email(), z.literal(''), z.null()]).optional(),
     nationalId: z
-      .union([z.string().trim().regex(/^\d{14}$/), z.literal(''), z.null()])
+      .union([
+        z
+          .string()
+          .trim()
+          .regex(/^\d{14}$/),
+        z.literal(''),
+        z.null(),
+      ])
       .optional(),
     address: z.union([z.string().trim().max(2000), z.null()]).optional(),
     photo: z.union([z.string().url(), z.literal(''), z.null()]).optional(),

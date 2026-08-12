@@ -28,10 +28,10 @@ Content-Type: application/json
 
 استخدم التوكن في كل الطلبات:
 
-| Header | القيمة |
-|--------|--------|
-| `Authorization` | `Bearer <token>` |
-| `Content-Type` | `application/json` (أو `multipart/form-data` عند رفع صور) |
+| Header          | القيمة                                                    |
+| --------------- | --------------------------------------------------------- |
+| `Authorization` | `Bearer <token>`                                          |
+| `Content-Type`  | `application/json` (أو `multipart/form-data` عند رفع صور) |
 
 ---
 
@@ -43,12 +43,12 @@ Content-Type: application/json
 School → Academic Year → Grade → Classroom → Student
 ```
 
-| الخطوة | ماذا تحتاج؟ | المسار |
-|--------|-------------|--------|
-| 1 | سنة دراسية | `POST /api/school/academic-years` |
-| 2 | صف دراسي | `POST /api/school/grades` |
-| 3 | فصل داخل الصف | `POST /api/school/grades/:gradeId/classes` |
-| 4 | طالب مربوط بالسنة + الصف + الفصل | `POST /api/school/students` |
+| الخطوة | ماذا تحتاج؟                      | المسار                                     |
+| ------ | -------------------------------- | ------------------------------------------ |
+| 1      | سنة دراسية                       | `POST /api/school/academic-years`          |
+| 2      | صف دراسي                         | `POST /api/school/grades`                  |
+| 3      | فصل داخل الصف                    | `POST /api/school/grades/:gradeId/classes` |
+| 4      | طالب مربوط بالسنة + الصف + الفصل | `POST /api/school/students`                |
 
 عند الإنشاء يتحقق السيرفر من:
 
@@ -63,12 +63,12 @@ School → Academic Year → Grade → Classroom → Student
 
 ## 3) السنة الدراسية (Academic Years)
 
-| Method | Path | الوصف |
-|--------|------|--------|
-| `GET` | `/api/school/academic-years` | قائمة + pagination |
-| `POST` | `/api/school/academic-years` | إنشاء سنة |
-| `GET` | `/api/school/academic-years/:yearId` | تفاصيل سنة |
-| `PUT` | `/api/school/academic-years/:yearId` | تعديل سنة |
+| Method   | Path                                 | الوصف                            |
+| -------- | ------------------------------------ | -------------------------------- |
+| `GET`    | `/api/school/academic-years`         | قائمة + pagination               |
+| `POST`   | `/api/school/academic-years`         | إنشاء سنة                        |
+| `GET`    | `/api/school/academic-years/:yearId` | تفاصيل سنة                       |
+| `PUT`    | `/api/school/academic-years/:yearId` | تعديل سنة                        |
 | `DELETE` | `/api/school/academic-years/:yearId` | حذف (مرفوض إن وُجد طلاب مرتبطون) |
 
 ### إنشاء سنة دراسية
@@ -86,12 +86,12 @@ POST /api/school/academic-years
 }
 ```
 
-| الحقل | نوع | إلزامي | ملاحظات |
-|-------|-----|--------|---------|
-| `name` | string | نعم | فريد داخل المدرسة |
-| `startDate` | `YYYY-MM-DD` | نعم | |
-| `endDate` | `YYYY-MM-DD` | نعم | ≥ `startDate` |
-| `isCurrent` | boolean | لا | إن `true` تُلغى الحالية السابقة تلقائيًا |
+| الحقل       | نوع          | إلزامي | ملاحظات                                  |
+| ----------- | ------------ | ------ | ---------------------------------------- |
+| `name`      | string       | نعم    | فريد داخل المدرسة                        |
+| `startDate` | `YYYY-MM-DD` | نعم    |                                          |
+| `endDate`   | `YYYY-MM-DD` | نعم    | ≥ `startDate`                            |
+| `isCurrent` | boolean      | لا     | إن `true` تُلغى الحالية السابقة تلقائيًا |
 
 **Response 201**
 
@@ -114,22 +114,22 @@ POST /api/school/academic-years
 
 ## 4) إدارة الطلاب — نظرة عامة
 
-| Method | Path | الوصف |
-|--------|------|--------|
-| `GET` | `/api/school/students` | قائمة الطلاب (بحث + فلاتر + pagination) |
-| `GET` | `/api/school/students/:studentId` | تفاصيل طالب + علاقات |
-| `POST` | `/api/school/students` | إضافة طالب |
-| `PUT` | `/api/school/students/:studentId` | تعديل طالب |
-| `PATCH` | `/api/school/students/:studentId` | نفس التعديل (توافق) |
-| `DELETE` | `/api/school/students/:studentId` | Soft Delete |
+| Method   | Path                              | الوصف                                   |
+| -------- | --------------------------------- | --------------------------------------- |
+| `GET`    | `/api/school/students`            | قائمة الطلاب (بحث + فلاتر + pagination) |
+| `GET`    | `/api/school/students/:studentId` | تفاصيل طالب + علاقات                    |
+| `POST`   | `/api/school/students`            | إضافة طالب                              |
+| `PUT`    | `/api/school/students/:studentId` | تعديل طالب                              |
+| `PATCH`  | `/api/school/students/:studentId` | نفس التعديل (توافق)                     |
+| `DELETE` | `/api/school/students/:studentId` | Soft Delete                             |
 
 مسارات مرتبطة (موجودة مسبقًا):
 
-| Method | Path | الوصف |
-|--------|------|--------|
-| `GET` | `/api/school/students/:studentId/qr` | QR للطالب |
-| `GET` | `/api/school/students/:studentId/fees` | مصروفات الطالب |
-| `GET` | `/api/school/students/:studentId/attendance-days` | أيام الحضور |
+| Method | Path                                              | الوصف          |
+| ------ | ------------------------------------------------- | -------------- |
+| `GET`  | `/api/school/students/:studentId/qr`              | QR للطالب      |
+| `GET`  | `/api/school/students/:studentId/fees`            | مصروفات الطالب |
+| `GET`  | `/api/school/students/:studentId/attendance-days` | أيام الحضور    |
 
 ---
 
@@ -137,10 +137,10 @@ POST /api/school/academic-years
 
 على قوائم `GET`:
 
-| المعامل | الافتراضي | الحد |
-|---------|------------|------|
-| `limit` | `20` | أقصى `100` |
-| `skip` | `0` | — |
+| المعامل | الافتراضي | الحد       |
+| ------- | --------- | ---------- |
+| `limit` | `20`      | أقصى `100` |
+| `skip`  | `0`       | —          |
 
 شكل الاستجابة المشترك:
 
@@ -165,15 +165,15 @@ GET /api/school/students
 
 ### Query Parameters
 
-| المعامل | الوصف |
-|---------|--------|
-| `q` | بحث بالاسم / الرقم القومي / هاتف ولي الأمر / كود الطالب |
-| `studentCode` | بحث جزئي بكود الطالب |
-| `gradeId` | فلتر حسب الصف |
-| `classroomId` أو `classId` | فلتر حسب الفصل |
-| `academicYearId` | فلتر حسب السنة الدراسية |
-| `status` | `active` \| `suspended` \| `graduated` \| `transferred` |
-| `limit` / `skip` | Pagination |
+| المعامل                    | الوصف                                                   |
+| -------------------------- | ------------------------------------------------------- |
+| `q`                        | بحث بالاسم / الرقم القومي / هاتف ولي الأمر / كود الطالب |
+| `studentCode`              | بحث جزئي بكود الطالب                                    |
+| `gradeId`                  | فلتر حسب الصف                                           |
+| `classroomId` أو `classId` | فلتر حسب الفصل                                          |
+| `academicYearId`           | فلتر حسب السنة الدراسية                                 |
+| `status`                   | `active` \| `suspended` \| `graduated` \| `transferred` |
+| `limit` / `skip`           | Pagination                                              |
 
 ### أمثلة
 
@@ -324,8 +324,8 @@ POST /api/school/students
 
 ### ما يحدث تلقائيًا عند الإنشاء
 
-1. التحقق من السنة / الصف / الفصل والعلاقات بينها  
-2. توليد **كود طالب فريد**: `ST-{year}-000001`  
+1. التحقق من السنة / الصف / الفصل والعلاقات بينها
+2. توليد **كود طالب فريد**: `ST-{year}-000001`
 3. إنشاء حساب دخول للطالب:
    - `username` = `studentCode`
    - `role` = `student`
@@ -339,42 +339,42 @@ POST /api/school/students
 
 #### البيانات الشخصية
 
-| الحقل | نوع | إلزامي | ملاحظات |
-|-------|-----|--------|---------|
-| `firstName` | string | نعم* | مع `lastName` |
-| `lastName` | string | نعم* | مع `firstName` |
-| `fullName` | string | بديل* | يمكن بدل الاسمين |
-| `gender` | `male` \| `female` | نعم** | أو من الرقم القومي |
-| `birthDate` | `YYYY-MM-DD` | نعم** | أو `dateOfBirth` أو من الرقم القومي |
-| `nationalId` | string (14 رقم) | لا | فريد داخل المدرسة إن وُجد |
-| `address` | string | لا | |
-| `studentPhone` | string | لا | أو `phone` |
-| `status` | enum | لا | افتراضي `active` |
-| `password` | string (8+) | لا | إن لم يُرسل تُولَّد تلقائيًا |
+| الحقل          | نوع                | إلزامي  | ملاحظات                             |
+| -------------- | ------------------ | ------- | ----------------------------------- |
+| `firstName`    | string             | نعم\*   | مع `lastName`                       |
+| `lastName`     | string             | نعم\*   | مع `firstName`                      |
+| `fullName`     | string             | بديل\*  | يمكن بدل الاسمين                    |
+| `gender`       | `male` \| `female` | نعم\*\* | أو من الرقم القومي                  |
+| `birthDate`    | `YYYY-MM-DD`       | نعم\*\* | أو `dateOfBirth` أو من الرقم القومي |
+| `nationalId`   | string (14 رقم)    | لا      | فريد داخل المدرسة إن وُجد           |
+| `address`      | string             | لا      |                                     |
+| `studentPhone` | string             | لا      | أو `phone`                          |
+| `status`       | enum               | لا      | افتراضي `active`                    |
+| `password`     | string (8+)        | لا      | إن لم يُرسل تُولَّد تلقائيًا        |
 
 \* يجب `firstName`+`lastName` **أو** `fullName`  
 \*\* إن وُجد `nationalId` مصري صالح يمكن استنتاج الميلاد والنوع
 
 #### الربط الأكاديمي
 
-| الحقل | نوع | إلزامي | ملاحظات |
-|-------|-----|--------|---------|
-| `academicYearId` | number | لا | إن لم يُرسل → السنة الحالية (`isCurrent`) |
-| `gradeId` | number | **نعم** | يجب أن يخص المدرسة |
-| `classroomId` | number | نعم*** | أو `classId` |
-| `classId` | number | نعم*** | توافق خلفي لنفس الفصل |
+| الحقل            | نوع    | إلزامي    | ملاحظات                                   |
+| ---------------- | ------ | --------- | ----------------------------------------- |
+| `academicYearId` | number | لا        | إن لم يُرسل → السنة الحالية (`isCurrent`) |
+| `gradeId`        | number | **نعم**   | يجب أن يخص المدرسة                        |
+| `classroomId`    | number | نعم\*\*\* | أو `classId`                              |
+| `classId`        | number | نعم\*\*\* | توافق خلفي لنفس الفصل                     |
 
 \*\*\* أحدهما مطلوب
 
 #### بيانات ولي الأمر
 
-| الحقل | نوع | إلزامي | ملاحظات |
-|-------|-----|--------|---------|
-| `parentName` | string | لا | افتراضي «ولي أمر»؛ أو `parentFullName` |
-| `parentPhone` | string | **نعم** | 8–20 حرفًا، أرقام/رموز هاتف |
-| `parentEmail` | email | لا | |
-| `relationship` | enum | لا | `father` \| `mother` \| `guardian` \| `other` (افتراضي `father`) |
-| `parentRelation` | enum | لا | توافق: `father` \| `mother` \| `other` |
+| الحقل            | نوع    | إلزامي  | ملاحظات                                                          |
+| ---------------- | ------ | ------- | ---------------------------------------------------------------- |
+| `parentName`     | string | لا      | افتراضي «ولي أمر»؛ أو `parentFullName`                           |
+| `parentPhone`    | string | **نعم** | 8–20 حرفًا، أرقام/رموز هاتف                                      |
+| `parentEmail`    | email  | لا      |                                                                  |
+| `relationship`   | enum   | لا      | `father` \| `mother` \| `guardian` \| `other` (افتراضي `father`) |
+| `parentRelation` | enum   | لا      | توافق: `father` \| `mother` \| `other`                           |
 
 ### مثال JSON
 
@@ -484,13 +484,13 @@ curl -X POST "http://localhost:8000/api/school/students" \
 
 ### أخطاء شائعة عند الإنشاء
 
-| Status | السبب |
-|--------|--------|
-| `400` | حقول ناقصة / فصل لا يتبع الصف / سنة غير موجودة للمدرسة |
-| `400` | لا توجد سنة حالية ولم يُرسل `academicYearId` |
-| `401` | توكن غير صالح |
-| `403` | ليس حساب مدرسة |
-| `409` | رقم قومي مكرر أو تعارض فريد (كود/بريد/هاتف) |
+| Status | السبب                                                  |
+| ------ | ------------------------------------------------------ |
+| `400`  | حقول ناقصة / فصل لا يتبع الصف / سنة غير موجودة للمدرسة |
+| `400`  | لا توجد سنة حالية ولم يُرسل `academicYearId`           |
+| `401`  | توكن غير صالح                                          |
+| `403`  | ليس حساب مدرسة                                         |
+| `409`  | رقم قومي مكرر أو تعارض فريد (كود/بريد/هاتف)            |
 
 ---
 
@@ -510,20 +510,20 @@ PATCH /api/school/students/:studentId
 
 ### حقول قابلة للتعديل
 
-| الحقل | ملاحظات |
-|-------|---------|
-| `academicYearId` | يجب أن تخص المدرسة |
-| `gradeId` | يجب أن يخص المدرسة |
-| `classroomId` / `classId` | يجب أن يتبع `gradeId` الجديد/الحالي |
-| `firstName` / `lastName` / `fullName` | يحدّث `fullName` واسم حساب المستخدم |
-| `gender` | `male` \| `female` |
-| `birthDate` / `dateOfBirth` | `YYYY-MM-DD` |
-| `nationalId` | فريد داخل المدرسة إن وُجد |
-| `address` | أو `null` للمسح |
-| `studentPhone` / `phone` | |
-| `parentName` / `parentPhone` / `parentEmail` | |
-| `relationship` | |
-| `status` | `active` \| `suspended` \| `graduated` \| `transferred` |
+| الحقل                                        | ملاحظات                                                 |
+| -------------------------------------------- | ------------------------------------------------------- |
+| `academicYearId`                             | يجب أن تخص المدرسة                                      |
+| `gradeId`                                    | يجب أن يخص المدرسة                                      |
+| `classroomId` / `classId`                    | يجب أن يتبع `gradeId` الجديد/الحالي                     |
+| `firstName` / `lastName` / `fullName`        | يحدّث `fullName` واسم حساب المستخدم                     |
+| `gender`                                     | `male` \| `female`                                      |
+| `birthDate` / `dateOfBirth`                  | `YYYY-MM-DD`                                            |
+| `nationalId`                                 | فريد داخل المدرسة إن وُجد                               |
+| `address`                                    | أو `null` للمسح                                         |
+| `studentPhone` / `phone`                     |                                                         |
+| `parentName` / `parentPhone` / `parentEmail` |                                                         |
+| `relationship`                               |                                                         |
+| `status`                                     | `active` \| `suspended` \| `graduated` \| `transferred` |
 
 ### مثال: نقل طالب لفصل آخر
 
@@ -582,40 +582,40 @@ DELETE /api/school/students/:studentId
 
 الحقول التي ترجعها القائمة والتفاصيل والتعديل:
 
-| الحقل في API | المعنى |
-|--------------|--------|
-| `id` | المعرف الداخلي |
-| `schoolId` | المدرسة |
-| `academicYearId` | السنة الدراسية |
-| `gradeId` | الصف |
-| `classroomId` | الفصل |
-| `studentCode` | كود فريد مثل `ST-2026-000001` |
-| `firstName` / `lastName` / `fullName` | الاسم |
-| `gender` | النوع |
-| `birthDate` | تاريخ الميلاد |
-| `nationalId` | الرقم القومي (اختياري) |
-| `photo` | رابط الصورة |
-| `address` | العنوان |
-| `parentName` / `parentPhone` / `parentEmail` | ولي الأمر |
-| `relationship` | صلة القرابة |
-| `studentPhone` | هاتف الطالب |
-| `status` | الحالة |
-| `createdAt` / `updatedAt` | الطوابع الزمنية |
-| `studentId` | مرادف للكود (توافق QR/حضور) |
-| `gradeLabel` | اسم الصف للعرض |
-| `qrCode` | نص حمولة QR |
-| `userId` | حساب الدخول المرتبط |
+| الحقل في API                                 | المعنى                        |
+| -------------------------------------------- | ----------------------------- |
+| `id`                                         | المعرف الداخلي                |
+| `schoolId`                                   | المدرسة                       |
+| `academicYearId`                             | السنة الدراسية                |
+| `gradeId`                                    | الصف                          |
+| `classroomId`                                | الفصل                         |
+| `studentCode`                                | كود فريد مثل `ST-2026-000001` |
+| `firstName` / `lastName` / `fullName`        | الاسم                         |
+| `gender`                                     | النوع                         |
+| `birthDate`                                  | تاريخ الميلاد                 |
+| `nationalId`                                 | الرقم القومي (اختياري)        |
+| `photo`                                      | رابط الصورة                   |
+| `address`                                    | العنوان                       |
+| `parentName` / `parentPhone` / `parentEmail` | ولي الأمر                     |
+| `relationship`                               | صلة القرابة                   |
+| `studentPhone`                               | هاتف الطالب                   |
+| `status`                                     | الحالة                        |
+| `createdAt` / `updatedAt`                    | الطوابع الزمنية               |
+| `studentId`                                  | مرادف للكود (توافق QR/حضور)   |
+| `gradeLabel`                                 | اسم الصف للعرض                |
+| `qrCode`                                     | نص حمولة QR                   |
+| `userId`                                     | حساب الدخول المرتبط           |
 
 ---
 
 ## 12) حالات الطالب (`status`)
 
-| القيمة | المعنى |
-|--------|--------|
-| `active` | نشط (افتراضي عند الإنشاء) |
-| `suspended` | موقوف |
-| `graduated` | متخرج |
-| `transferred` | منقول |
+| القيمة        | المعنى                    |
+| ------------- | ------------------------- |
+| `active`      | نشط (افتراضي عند الإنشاء) |
+| `suspended`   | موقوف                     |
+| `graduated`   | متخرج                     |
+| `transferred` | منقول                     |
 
 ---
 
@@ -651,26 +651,26 @@ Authorization: Bearer <student_token>
 
 ## 14) أكواد الأخطاء السريعة
 
-| Status | المعنى |
-|--------|--------|
-| `400` | Validation / قواعد عمل (فصل≠صف، سنة ناقصة، …) |
-| `401` | غير مصرّح |
-| `403` | صلاحية غير كافية |
-| `404` | مورد غير موجود أو خارج المدرسة |
-| `409` | تكرار (رقم قومي / كود / …) |
-| `204` | حذف ناجح بدون جسم |
+| Status | المعنى                                        |
+| ------ | --------------------------------------------- |
+| `400`  | Validation / قواعد عمل (فصل≠صف، سنة ناقصة، …) |
+| `401`  | غير مصرّح                                     |
+| `403`  | صلاحية غير كافية                              |
+| `404`  | مورد غير موجود أو خارج المدرسة                |
+| `409`  | تكرار (رقم قومي / كود / …)                    |
+| `204`  | حذف ناجح بدون جسم                             |
 
 ---
 
 ## 15) سيناريو استخدام سريع (Frontend)
 
-1. تسجيل دخول المدرسة → حفظ التوكن  
-2. التأكد من وجود سنة حالية (`GET /academic-years`) أو إنشاؤها  
-3. اختيار `gradeId` + `classroomId` من واجهات الصفوف/الفصول  
-4. `POST /students` بالبيانات  
-5. عرض `loginCodes` للمستخدم مرة واحدة (طباعة/نسخ)  
-6. القائمة: `GET /students?gradeId=&classroomId=&q=&status=`  
-7. التعديل: `PUT /students/:id`  
+1. تسجيل دخول المدرسة → حفظ التوكن
+2. التأكد من وجود سنة حالية (`GET /academic-years`) أو إنشاؤها
+3. اختيار `gradeId` + `classroomId` من واجهات الصفوف/الفصول
+4. `POST /students` بالبيانات
+5. عرض `loginCodes` للمستخدم مرة واحدة (طباعة/نسخ)
+6. القائمة: `GET /students?gradeId=&classroomId=&q=&status=`
+7. التعديل: `PUT /students/:id`
 8. الحذف: `DELETE /students/:id`
 
 ---

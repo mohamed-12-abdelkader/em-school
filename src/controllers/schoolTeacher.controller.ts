@@ -3,6 +3,7 @@ import { parsePagination, parsePositiveIntParam } from '../utils/pagination';
 import * as schoolTeacherService from '../services/schoolTeacher.service';
 import type { TeacherStatus } from '../types/schoolSubjectsTeachers';
 import { HttpError } from '../utils';
+import { getAuthSchoolId } from '../utils/schoolContext';
 
 function parseOptionalStatus(q: Record<string, unknown>): TeacherStatus | undefined {
   const raw = q.status;
@@ -14,7 +15,7 @@ function parseOptionalStatus(q: Record<string, unknown>): TeacherStatus | undefi
 }
 
 export async function listTeachers(req: Request, res: Response) {
-  const schoolId = req.user!.id;
+  const schoolId = getAuthSchoolId(req);
   const query = req.query as Record<string, unknown>;
   const { limit, skip } = parsePagination(query);
   const q = typeof query.q === 'string' ? query.q : undefined;
@@ -25,14 +26,14 @@ export async function listTeachers(req: Request, res: Response) {
 }
 
 export async function getTeacher(req: Request, res: Response) {
-  const schoolId = req.user!.id;
+  const schoolId = getAuthSchoolId(req);
   const teacherId = parsePositiveIntParam(req.params.teacherId, 'teacherId');
   const result = await schoolTeacherService.getTeacher(teacherId, schoolId);
   res.json(result);
 }
 
 export async function createTeacher(req: Request, res: Response) {
-  const schoolId = req.user!.id;
+  const schoolId = getAuthSchoolId(req);
   const body = req.body as Record<string, unknown>;
 
   const result = await schoolTeacherService.createTeacher(schoolId, {
@@ -57,21 +58,21 @@ export async function createTeacher(req: Request, res: Response) {
 }
 
 export async function updateTeacher(req: Request, res: Response) {
-  const schoolId = req.user!.id;
+  const schoolId = getAuthSchoolId(req);
   const teacherId = parsePositiveIntParam(req.params.teacherId, 'teacherId');
   const teacher = await schoolTeacherService.updateTeacher(schoolId, teacherId, req.body);
   res.json({ teacher });
 }
 
 export async function deleteTeacher(req: Request, res: Response) {
-  const schoolId = req.user!.id;
+  const schoolId = getAuthSchoolId(req);
   const teacherId = parsePositiveIntParam(req.params.teacherId, 'teacherId');
   await schoolTeacherService.deleteTeacher(schoolId, teacherId);
   res.status(204).send();
 }
 
 export async function assignTeacherToClasses(req: Request, res: Response) {
-  const schoolId = req.user!.id;
+  const schoolId = getAuthSchoolId(req);
   const teacherId = parsePositiveIntParam(req.params.teacherId, 'teacherId');
   const body = req.body as { classIds: number[] };
   await schoolTeacherService.assignTeacherToClasses(schoolId, teacherId, body.classIds);
@@ -79,7 +80,7 @@ export async function assignTeacherToClasses(req: Request, res: Response) {
 }
 
 export async function removeTeacherFromClass(req: Request, res: Response) {
-  const schoolId = req.user!.id;
+  const schoolId = getAuthSchoolId(req);
   const teacherId = parsePositiveIntParam(req.params.teacherId, 'teacherId');
   const classId = parsePositiveIntParam(req.params.classId, 'classId');
   await schoolTeacherService.removeTeacherFromClass(schoolId, teacherId, classId);
@@ -87,7 +88,7 @@ export async function removeTeacherFromClass(req: Request, res: Response) {
 }
 
 export async function listClassesByTeacher(req: Request, res: Response) {
-  const schoolId = req.user!.id;
+  const schoolId = getAuthSchoolId(req);
   const teacherId = parsePositiveIntParam(req.params.teacherId, 'teacherId');
   const { limit, skip } = parsePagination(req.query as Record<string, unknown>);
   const result = await schoolTeacherService.getClassesByTeacher(schoolId, teacherId, {
@@ -98,7 +99,7 @@ export async function listClassesByTeacher(req: Request, res: Response) {
 }
 
 export async function listTeachersByClass(req: Request, res: Response) {
-  const schoolId = req.user!.id;
+  const schoolId = getAuthSchoolId(req);
   const classId = parsePositiveIntParam(req.params.classId, 'classId');
   const { limit, skip } = parsePagination(req.query as Record<string, unknown>);
   const result = await schoolTeacherService.getTeachersByClass(schoolId, classId, { limit, skip });

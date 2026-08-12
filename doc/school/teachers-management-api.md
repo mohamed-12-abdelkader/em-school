@@ -16,11 +16,13 @@ POST /api/auth/login
 ```
 
 **مدرسة:**
+
 ```json
 { "username": "school@next.com", "password": "school123" }
 ```
 
 **مدرس (بعد الإنشاء):**
+
 ```json
 { "username": "TCH-000001", "password": "<generated>" }
 ```
@@ -40,21 +42,21 @@ School → Academic Year → Grade → Classroom → Subject (على الفصل)
 
 ## 3) المدرسون — `/api/school/teachers`
 
-| Method | Path | الوصف |
-|--------|------|--------|
-| `GET` | `/teachers` | قائمة + بحث + فلتر حالة |
-| `GET` | `/teachers/:teacherId` | تفاصيل + كل التوزيعات |
-| `POST` | `/teachers` | إضافة مدرس + حساب دخول |
-| `PUT` / `PATCH` | `/teachers/:teacherId` | تعديل |
-| `DELETE` | `/teachers/:teacherId` | Soft delete |
+| Method          | Path                   | الوصف                   |
+| --------------- | ---------------------- | ----------------------- |
+| `GET`           | `/teachers`            | قائمة + بحث + فلتر حالة |
+| `GET`           | `/teachers/:teacherId` | تفاصيل + كل التوزيعات   |
+| `POST`          | `/teachers`            | إضافة مدرس + حساب دخول  |
+| `PUT` / `PATCH` | `/teachers/:teacherId` | تعديل                   |
+| `DELETE`        | `/teachers/:teacherId` | Soft delete             |
 
 ### Query (GET list)
 
-| Param | الوصف |
-|-------|--------|
-| `q` | بحث بالاسم / الكود / الهاتف / التخصص |
-| `status` | `active` \| `suspended` |
-| `limit` / `skip` | Pagination |
+| Param            | الوصف                                |
+| ---------------- | ------------------------------------ |
+| `q`              | بحث بالاسم / الكود / الهاتف / التخصص |
+| `status`         | `active` \| `suspended`              |
+| `limit` / `skip` | Pagination                           |
 
 ### POST — إنشاء مدرس
 
@@ -74,12 +76,14 @@ School → Academic Year → Grade → Classroom → Subject (على الفصل)
 ```
 
 **تلقائيًا:**
+
 - `employeeCode` مثل `TCH-000145` (فريد عالميًا)
 - `username` = `employeeCode`
 - `role` = `teacher`
 - كلمة مرور مولَّدة إن لم تُرسل
 
 **Response 201:**
+
 ```json
 {
   "teacher": { "employeeCode": "TCH-000145", "...": "..." },
@@ -105,24 +109,24 @@ Soft delete (`deleted_at`) + تعطيل حساب المستخدم.
 
 يربط: **سنة + مدرس + صف + فصل + مادة**
 
-| Method | Path | الوصف |
-|--------|------|--------|
-| `GET` | `/teacher-assignments` | قائمة التوزيعات |
-| `GET` | `/teacher-assignments/:assignmentId` | تفاصيل |
-| `POST` | `/teacher-assignments` | إسناد |
-| `PUT` | `/teacher-assignments/:assignmentId` | تعديل |
-| `DELETE` | `/teacher-assignments/:assignmentId` | حذف (soft) |
+| Method   | Path                                 | الوصف           |
+| -------- | ------------------------------------ | --------------- |
+| `GET`    | `/teacher-assignments`               | قائمة التوزيعات |
+| `GET`    | `/teacher-assignments/:assignmentId` | تفاصيل          |
+| `POST`   | `/teacher-assignments`               | إسناد           |
+| `PUT`    | `/teacher-assignments/:assignmentId` | تعديل           |
+| `DELETE` | `/teacher-assignments/:assignmentId` | حذف (soft)      |
 
 ### Query (GET list)
 
-| Param | الوصف |
-|-------|--------|
-| `teacherId` | فلتر مدرس |
-| `academicYearId` | فلتر سنة |
-| `gradeId` | فلتر صف |
-| `classroomId` | فلتر فصل |
-| `subjectId` | فلتر مادة |
-| `q` | بحث |
+| Param            | الوصف      |
+| ---------------- | ---------- |
+| `teacherId`      | فلتر مدرس  |
+| `academicYearId` | فلتر سنة   |
+| `gradeId`        | فلتر صف    |
+| `classroomId`    | فلتر فصل   |
+| `subjectId`      | فلتر مادة  |
+| `q`              | بحث        |
 | `limit` / `skip` | Pagination |
 
 ### POST — إسناد مادة لمدرس
@@ -138,12 +142,14 @@ Soft delete (`deleted_at`) + تعطيل حساب المستخدم.
 ```
 
 **Validation:**
+
 - المدرس / الصف / الفصل / السنة تخص نفس المدرسة
 - الفصل يتبع الصف
 - المادة مفعّلة على الفصل (`school_class_subjects`)
 - **لا تكرار** لنفس (سنة + مدرس + صف + فصل + مادة)
 
 **Response 201:**
+
 ```json
 {
   "assignment": {
@@ -166,11 +172,11 @@ Soft delete (`deleted_at`) + تعطيل حساب المستخدم.
 ### أمثلة مسموحة
 
 | المدرس | المادة | الفصل |
-|--------|--------|-------|
-| محمد | كيمياء | 3A |
-| محمد | كيمياء | 3B |
-| محمد | كيمياء | 2A |
-| محمد | فيزياء | 2B |
+| ------ | ------ | ----- |
+| محمد   | كيمياء | 3A    |
+| محمد   | كيمياء | 3B    |
+| محمد   | كيمياء | 2A    |
+| محمد   | فيزياء | 2B    |
 
 ### مثال ممنوع (تكرار)
 
@@ -180,10 +186,10 @@ Soft delete (`deleted_at`) + تعطيل حساب المستخدم.
 
 ## 5) بوابة المدرس — `/api/teacher`
 
-| Method | Path | الوصف |
-|--------|------|--------|
-| `GET` | `/me` | بيانات المدرس الحالي |
-| `GET` | `/assignments` | توزيعاتي فقط |
+| Method | Path           | الوصف                |
+| ------ | -------------- | -------------------- |
+| `GET`  | `/me`          | بيانات المدرس الحالي |
+| `GET`  | `/assignments` | توزيعاتي فقط         |
 
 > وحدات الحضور / الدرجات / الواجبات المستقبلية تعتمد على `teacher_assignments` عبر:
 > `assertTeacherCanAccess({ teacherId, schoolId, classroomId, subjectId })`
@@ -205,11 +211,11 @@ Soft delete (`deleted_at`) + تعطيل حساب المستخدم.
 
 ## 7) مسارات Legacy (توافق)
 
-| Method | Path | ملاحظة |
-|--------|------|--------|
-| `POST` | `/teachers/:teacherId/classes` | يتطلب `subject_id` على المدرس |
-| `DELETE` | `/teachers/:teacherId/classes/:classId` | |
-| `GET` | `/teachers/:teacherId/classes` | |
+| Method   | Path                                    | ملاحظة                        |
+| -------- | --------------------------------------- | ----------------------------- |
+| `POST`   | `/teachers/:teacherId/classes`          | يتطلب `subject_id` على المدرس |
+| `DELETE` | `/teachers/:teacherId/classes/:classId` |                               |
+| `GET`    | `/teachers/:teacherId/classes`          |                               |
 
 يفضّل استخدام `/teacher-assignments` للتوزيع الجديد.
 
@@ -217,21 +223,21 @@ Soft delete (`deleted_at`) + تعطيل حساب المستخدم.
 
 ## 8) أخطاء شائعة
 
-| Status | السبب |
-|--------|--------|
-| `400` | علاقات غير صحيحة (فصل≠صف، مادة غير مفعّلة على الفصل) |
-| `403` | صلاحية غير كافية |
-| `404` | مورد غير موجود أو خارج المدرسة |
-| `409` | توزيع مكرر / تعارض |
+| Status | السبب                                                |
+| ------ | ---------------------------------------------------- |
+| `400`  | علاقات غير صحيحة (فصل≠صف، مادة غير مفعّلة على الفصل) |
+| `403`  | صلاحية غير كافية                                     |
+| `404`  | مورد غير موجود أو خارج المدرسة                       |
+| `409`  | توزيع مكرر / تعارض                                   |
 
 ---
 
 ## 9) الجداول
 
-| الجدول | الوظيفة |
-|--------|---------|
-| `school_teachers` | بيانات المدرس + `employee_code` |
-| `teacher_assignments` | ربط مدرس + مادة + فصل + صف + سنة |
-| `users` | حساب الدخول (`username` = `employee_code`) |
+| الجدول                | الوظيفة                                    |
+| --------------------- | ------------------------------------------ |
+| `school_teachers`     | بيانات المدرس + `employee_code`            |
+| `teacher_assignments` | ربط مدرس + مادة + فصل + صف + سنة           |
+| `users`               | حساب الدخول (`username` = `employee_code`) |
 
 **Indexes:** `school_id`, `teacher_id`, `subject_id`, `classroom_id`, `grade_id`, `academic_year_id`

@@ -8,9 +8,11 @@
 - GET `/api/my-students`
 
 ### الوصف
+
 يعرض قائمة بجميع الطلاب المسجلين مع الأدمن المحدد.
 
 ### المعاملات الاختيارية:
+
 - `limit`: عدد النتائج (افتراضي: 20)
 - `skip`: عدد النتائج المراد تخطيها (افتراضي: 0)
 - `q`: البحث بالاسم أو رقم الهاتف
@@ -18,7 +20,9 @@
 - `status`: تصفية حسب الحالة (`active` أو `inactive`)
 
 ### الاستجابة:
+
 - 200 OK:
+
 ```json
 {
   "students": [
@@ -57,24 +61,28 @@
 ### أمثلة الاستخدام:
 
 #### البحث عن طالب:
+
 ```bash
 curl -X GET "https://your-host/api/my-students?q=أحمد" \
   -H "Authorization: Bearer <ADMIN_TOKEN>"
 ```
 
 #### تصفية حسب الصف:
+
 ```bash
 curl -X GET "https://your-host/api/my-students?grade_id=4" \
   -H "Authorization: Bearer <ADMIN_TOKEN>"
 ```
 
 #### تصفية حسب الحالة:
+
 ```bash
 curl -X GET "https://your-host/api/my-students?status=active" \
   -H "Authorization: Bearer <ADMIN_TOKEN>"
 ```
 
 #### التصفح:
+
 ```bash
 curl -X GET "https://your-host/api/my-students?limit=10&skip=20" \
   -H "Authorization: Bearer <ADMIN_TOKEN>"
@@ -85,10 +93,13 @@ curl -X GET "https://your-host/api/my-students?limit=10&skip=20" \
 - GET `/api/my-students/stats`
 
 ### الوصف
+
 يعرض إحصائيات شاملة عن طلاب الأدمن.
 
 ### الاستجابة:
+
 - 200 OK:
+
 ```json
 {
   "total_students": 25,
@@ -120,6 +131,7 @@ curl -X GET "https://your-host/api/my-students?limit=10&skip=20" \
 ```
 
 ### مثال cURL:
+
 ```bash
 curl -X GET "https://your-host/api/my-students/stats" \
   -H "Authorization: Bearer <ADMIN_TOKEN>"
@@ -130,9 +142,11 @@ curl -X GET "https://your-host/api/my-students/stats" \
 - PATCH `/api/my-students/:id/status`
 
 ### الوصف
+
 يسمح للأدمن بتحديث حالة طالب من طلابه (نشط/غير نشط).
 
 ### المعاملات المطلوبة:
+
 ```json
 {
   "status": "inactive"
@@ -140,7 +154,9 @@ curl -X GET "https://your-host/api/my-students/stats" \
 ```
 
 ### الاستجابة:
+
 - 200 OK:
+
 ```json
 {
   "message": "Student status updated to inactive",
@@ -155,6 +171,7 @@ curl -X GET "https://your-host/api/my-students/stats" \
 ```
 
 - 404 Not Found (طالب غير موجود أو لا ينتمي للأدمن):
+
 ```json
 {
   "message": "Student not found or does not belong to you"
@@ -162,6 +179,7 @@ curl -X GET "https://your-host/api/my-students/stats" \
 ```
 
 ### مثال cURL:
+
 ```bash
 curl -X PATCH "https://your-host/api/my-students/10/status" \
   -H "Authorization: Bearer <ADMIN_TOKEN>" \
@@ -189,24 +207,28 @@ curl -X PATCH "https://your-host/api/my-students/10/status" \
 ## أمثلة متقدمة
 
 ### البحث والتصفية معاً:
+
 ```bash
 curl -X GET "https://your-host/api/my-students?q=محمد&grade_id=4&status=active&limit=10" \
   -H "Authorization: Bearer <ADMIN_TOKEN>"
 ```
 
 ### الحصول على الصفحة الثانية:
+
 ```bash
 curl -X GET "https://your-host/api/my-students?limit=10&skip=10" \
   -H "Authorization: Bearer <ADMIN_TOKEN>"
 ```
 
 ### عرض الطلاب غير النشطين فقط:
+
 ```bash
 curl -X GET "https://your-host/api/my-students?status=inactive" \
   -H "Authorization: Bearer <ADMIN_TOKEN>"
 ```
 
 ### تفعيل طالب:
+
 ```bash
 curl -X PATCH "https://your-host/api/my-students/10/status" \
   -H "Authorization: Bearer <ADMIN_TOKEN>" \
@@ -215,6 +237,7 @@ curl -X PATCH "https://your-host/api/my-students/10/status" \
 ```
 
 ### إلغاء تفعيل طالب:
+
 ```bash
 curl -X PATCH "https://your-host/api/my-students/10/status" \
   -H "Authorization: Bearer <ADMIN_TOKEN>" \

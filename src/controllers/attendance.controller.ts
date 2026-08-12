@@ -3,16 +3,17 @@ import * as attendanceService from '../services/attendance.service';
 import * as studentModel from '../models/student.model';
 import { HttpError } from '../utils';
 import { parsePagination, parsePositiveIntParam } from '../utils/pagination';
+import { getAuthSchoolId } from '../utils/schoolContext';
 
 export async function scanAttendance(req: Request, res: Response) {
-  const schoolId = req.user!.id;
+  const schoolId = getAuthSchoolId(req);
   const { raw } = req.body as { raw: string };
   const result = await attendanceService.recordScan(schoolId, raw);
   res.status(201).json(result);
 }
 
 export async function listAttendance(req: Request, res: Response) {
-  const schoolId = req.user!.id;
+  const schoolId = getAuthSchoolId(req);
   const { limit, skip } = parsePagination(req.query as Record<string, unknown>);
   const q = req.query as Record<string, string | undefined>;
   let studentInternalId: number | undefined;
@@ -48,7 +49,7 @@ export async function listParentAttendance(req: Request, res: Response) {
 }
 
 export async function getStudentAttendanceDays(req: Request, res: Response) {
-  const schoolId = req.user!.id;
+  const schoolId = getAuthSchoolId(req);
   const studentInternalId = parsePositiveIntParam(req.params.studentId, 'studentId');
   const st = await studentModel.findByIdAndSchool(studentInternalId, schoolId);
   if (!st) throw new HttpError(404, 'Student not found');

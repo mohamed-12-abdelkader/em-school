@@ -1,4 +1,11 @@
-export type AppRole = 'admin' | 'school' | 'student' | 'teacher' | 'manager' | 'parent';
+export type AppRole =
+  | 'admin'
+  | 'school'
+  | 'school_admin'
+  | 'student'
+  | 'teacher'
+  | 'manager'
+  | 'parent';
 
 /** Payload used when issuing JWTs */
 export interface TokenUser {
@@ -13,6 +20,7 @@ export interface AuthUser {
   role: AppRole;
   email: string | null;
   jti: string | null;
+  schoolId: number | null;
 }
 
 export interface PublicUser {
@@ -23,5 +31,6 @@ export interface PublicUser {
   description: string | null;
   logo: string | null;
   status: string | null;
+  schoolId: number | null;
   created_at: Date;
 }

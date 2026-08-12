@@ -154,9 +154,7 @@ export async function listForParentUser(
   const lim = p++;
   const off = p++;
   params.push(options.limit, options.skip);
-  const r = await pool.query<
-    AttendanceRow & { student_full_name: string; grade: string | null }
-  >(
+  const r = await pool.query<AttendanceRow & { student_full_name: string; grade: string | null }>(
     `SELECT a.id, a.school_id, a.student_internal_id, a.student_id,
             a.attendance_date::text, a.attendance_time::text, a.status, a.created_at,
             s.full_name AS student_full_name, s.grade

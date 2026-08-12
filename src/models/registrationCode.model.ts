@@ -11,9 +11,7 @@ export interface RegistrationCodeRow {
   revoked_at: Date | null;
 }
 
-export async function findActiveBySchoolId(
-  schoolId: number,
-): Promise<RegistrationCodeRow | null> {
+export async function findActiveBySchoolId(schoolId: number): Promise<RegistrationCodeRow | null> {
   const r = await pool.query<RegistrationCodeRow>(
     `SELECT id, school_id, code, status, created_at, revoked_at
      FROM school_registration_codes
@@ -53,9 +51,8 @@ export async function revokeActiveForSchool(
 }
 
 export async function codeExists(code: string): Promise<boolean> {
-  const r = await pool.query(
-    `SELECT 1 FROM school_registration_codes WHERE code = $1 LIMIT 1`,
-    [code],
-  );
+  const r = await pool.query(`SELECT 1 FROM school_registration_codes WHERE code = $1 LIMIT 1`, [
+    code,
+  ]);
   return Boolean(r.rowCount);
 }

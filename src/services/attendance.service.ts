@@ -16,7 +16,10 @@ export async function recordScan(schoolUserId: number, rawQr: string) {
     throw new HttpError(403, 'هذا الرمز لا يخص مدرستك');
   }
 
-  const student = await studentModel.findBySchoolAndPublicStudentId(schoolUserId, payload.studentId);
+  const student = await studentModel.findBySchoolAndPublicStudentId(
+    schoolUserId,
+    payload.studentId,
+  );
   if (!student) {
     throw new HttpError(404, 'الطالب غير موجود');
   }
@@ -129,5 +132,10 @@ export async function countPresentDaysForStudent(
     from,
     to,
   });
-  return { student_internal_id: studentInternalId, present_days: days, from: from ?? null, to: to ?? null };
+  return {
+    student_internal_id: studentInternalId,
+    present_days: days,
+    from: from ?? null,
+    to: to ?? null,
+  };
 }

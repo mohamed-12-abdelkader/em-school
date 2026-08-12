@@ -1,6 +1,7 @@
 # APIs أكواد التفعيل والتسجيل في الكورسات
 
 ## نظرة عامة
+
 هذا الدليل يحتوي على APIs أكواد التفعيل والتسجيل في الكورسات التي تم إنشاؤها مؤخراً.
 
 ---
@@ -8,19 +9,22 @@
 ## 1. APIs أكواد التفعيل (للإدمن)
 
 ### إنشاء أكواد التفعيل للكورس
+
 - **المسار**: `POST /api/courses/:id/invite-codes`
 - **المصادقة**: `Authorization: Bearer <admin_token>`
 - **Content-Type**: `application/json`
 - **الوصف**: إنشاء أكواد تفعيل للكورس المحدد (استخدام واحد فقط لكل كود)
 
 #### المعاملات:
+
 ```json
 {
-  "count": 5  // عدد الأكواد المطلوب إنشاؤها (1-100، افتراضي: 1)
+  "count": 5 // عدد الأكواد المطلوب إنشاؤها (1-100، افتراضي: 1)
 }
 ```
 
 #### مثال cURL:
+
 ```bash
 # إنشاء كود واحد
 curl -X POST https://your-host/api/courses/1/invite-codes \
@@ -36,6 +40,7 @@ curl -X POST https://your-host/api/courses/1/invite-codes \
 ```
 
 #### الاستجابة:
+
 ```json
 {
   "message": "Generated 5 invite code(s) for course",
@@ -50,16 +55,19 @@ curl -X POST https://your-host/api/courses/1/invite-codes \
 ```
 
 ### عرض أكواد التفعيل للكورس
+
 - **المسار**: `GET /api/courses/:id/invite-codes`
 - **المصادقة**: `Authorization: Bearer <admin_token>`
 
 #### مثال cURL:
+
 ```bash
 curl -X GET https://your-host/api/courses/1/invite-codes \
   -H "Authorization: Bearer <ADMIN_TOKEN>"
 ```
 
 #### الاستجابة:
+
 ```json
 {
   "invite_codes": [
@@ -78,16 +86,19 @@ curl -X GET https://your-host/api/courses/1/invite-codes \
 ```
 
 ### حذف كود التفعيل
+
 - **المسار**: `DELETE /api/courses/invite-codes/:codeId`
 - **المصادقة**: `Authorization: Bearer <admin_token>`
 
 #### مثال cURL:
+
 ```bash
 curl -X DELETE https://your-host/api/courses/invite-codes/1 \
   -H "Authorization: Bearer <ADMIN_TOKEN>"
 ```
 
 #### الاستجابة:
+
 - **204 No Content**: تم الحذف بنجاح
 - **404 Not Found**: الكود غير موجود
 
@@ -96,12 +107,14 @@ curl -X DELETE https://your-host/api/courses/invite-codes/1 \
 ## 2. APIs أكواد التفعيل (للمدرسين)
 
 ### إنشاء كود تفعيل
+
 - **المسار**: `POST /api/teacher/invite-codes`
 - **المصادقة**: `Authorization: Bearer <teacher_token>`
 - **Content-Type**: `application/json`
 - **الوصف**: إنشاء كود تفعيل للكورس (يمكن تحديد عدد الاستخدامات وتاريخ الانتهاء)
 
 #### المعاملات:
+
 ```json
 {
   "course_id": 1,
@@ -111,6 +124,7 @@ curl -X DELETE https://your-host/api/courses/invite-codes/1 \
 ```
 
 #### مثال cURL:
+
 ```bash
 curl -X POST https://your-host/api/teacher/invite-codes \
   -H "Authorization: Bearer <TEACHER_TOKEN>" \
@@ -119,6 +133,7 @@ curl -X POST https://your-host/api/teacher/invite-codes \
 ```
 
 #### الاستجابة:
+
 ```json
 {
   "invite_code": {
@@ -134,16 +149,19 @@ curl -X POST https://your-host/api/teacher/invite-codes \
 ```
 
 ### عرض أكواد التفعيل
+
 - **المسار**: `GET /api/teacher/invite-codes`
 - **المصادقة**: `Authorization: Bearer <teacher_token>`
 
 #### مثال cURL:
+
 ```bash
 curl -X GET https://your-host/api/teacher/invite-codes \
   -H "Authorization: Bearer <TEACHER_TOKEN>"
 ```
 
 #### الاستجابة:
+
 ```json
 {
   "invite_codes": [
@@ -162,16 +180,19 @@ curl -X GET https://your-host/api/teacher/invite-codes \
 ```
 
 ### حذف كود التفعيل
+
 - **المسار**: `DELETE /api/teacher/invite-codes/:id`
 - **المصادقة**: `Authorization: Bearer <teacher_token>`
 
 #### مثال cURL:
+
 ```bash
 curl -X DELETE https://your-host/api/teacher/invite-codes/1 \
   -H "Authorization: Bearer <TEACHER_TOKEN>"
 ```
 
 #### الاستجابة:
+
 - **204 No Content**: تم الحذف بنجاح
 - **404 Not Found**: الكود غير موجود
 
@@ -180,12 +201,14 @@ curl -X DELETE https://your-host/api/teacher/invite-codes/1 \
 ## 3. APIs التسجيل في الكورسات (للطلاب)
 
 ### التسجيل في الكورس باستخدام كود التفعيل
+
 - **المسار**: `POST /api/student/enroll`
 - **المصادقة**: `Authorization: Bearer <student_token>`
 - **Content-Type**: `application/json`
 - **الوصف**: تسجيل الطالب في الكورس باستخدام كود التفعيل
 
 #### المعاملات:
+
 ```json
 {
   "course_id": 1,
@@ -194,6 +217,7 @@ curl -X DELETE https://your-host/api/teacher/invite-codes/1 \
 ```
 
 #### مثال cURL:
+
 ```bash
 curl -X POST https://your-host/api/student/enroll \
   -H "Authorization: Bearer <STUDENT_TOKEN>" \
@@ -202,7 +226,9 @@ curl -X POST https://your-host/api/student/enroll \
 ```
 
 #### الاستجابة:
+
 - **201 Created**:
+
 ```json
 {
   "message": "Successfully enrolled in course"
@@ -210,6 +236,7 @@ curl -X POST https://your-host/api/student/enroll \
 ```
 
 - **400 Bad Request** (كود غير صحيح):
+
 ```json
 {
   "message": "Invalid invite code"
@@ -217,6 +244,7 @@ curl -X POST https://your-host/api/student/enroll \
 ```
 
 - **400 Bad Request** (كود منتهي الصلاحية):
+
 ```json
 {
   "message": "Invite code has expired"
@@ -224,6 +252,7 @@ curl -X POST https://your-host/api/student/enroll \
 ```
 
 - **400 Bad Request** (كود وصل للحد الأقصى):
+
 ```json
 {
   "message": "Invite code has reached maximum uses"
@@ -231,6 +260,7 @@ curl -X POST https://your-host/api/student/enroll \
 ```
 
 - **400 Bad Request** (مسجل مسبقاً):
+
 ```json
 {
   "message": "You are already enrolled in this course"
@@ -238,16 +268,19 @@ curl -X POST https://your-host/api/student/enroll \
 ```
 
 ### عرض الكورسات المسجل فيها الطالب
+
 - **المسار**: `GET /api/student/enrolled-courses`
 - **المصادقة**: `Authorization: Bearer <student_token>`
 
 #### مثال cURL:
+
 ```bash
 curl -X GET https://your-host/api/student/enrolled-courses \
   -H "Authorization: Bearer <STUDENT_TOKEN>"
 ```
 
 #### الاستجابة:
+
 ```json
 {
   "courses": [
@@ -270,17 +303,20 @@ curl -X GET https://your-host/api/student/enrolled-courses \
 ## 4. APIs عرض الكورسات للطلاب
 
 ### عرض الكورسات المتاحة للطالب
+
 - **المسار**: `GET /api/student/courses`
 - **المصادقة**: `Authorization: Bearer <student_token>`
 - **الوصف**: يعرض الكورسات المتاحة للطالب حسب صفه الدراسي مع حالة التسجيل
 
 #### مثال cURL:
+
 ```bash
 curl -X GET https://your-host/api/student/courses \
   -H "Authorization: Bearer <STUDENT_TOKEN>"
 ```
 
 #### الاستجابة:
+
 ```json
 {
   "courses": [
@@ -292,7 +328,7 @@ curl -X GET https://your-host/api/student/courses \
       "grade_id": 4,
       "image_url": "https://...",
       "created_at": "2025-10-03T12:00:00.000Z",
-      "status": "available",  // أو "enrolled"
+      "status": "available", // أو "enrolled"
       "enrolled_at": null
     }
   ]
@@ -300,11 +336,13 @@ curl -X GET https://your-host/api/student/courses \
 ```
 
 ### عرض تفاصيل الكورس
+
 - **المسار**: `GET /api/courses/:id`
 - **المصادقة**: `admin` (جميع الكورسات) أو `student` (الكورسات المسجل فيها فقط)
 - **الوصف**: يعرض تفاصيل الكورس مع المحاضرات والفيديوهات والملفات
 
 #### مثال cURL:
+
 ```bash
 # للطالب
 curl -X GET https://your-host/api/courses/1 \
@@ -312,6 +350,7 @@ curl -X GET https://your-host/api/courses/1 \
 ```
 
 #### الاستجابة:
+
 ```json
 {
   "course": {
@@ -361,21 +400,25 @@ curl -X GET https://your-host/api/courses/1 \
 ## 6. APIs إدارة الطلاب في الكورسات (للإدمن)
 
 ### عرض الطلاب المشتركين في الكورس
+
 - **المسار**: `GET /api/courses/:id/students`
 - **المصادقة**: `Authorization: Bearer <admin_token>`
 - **الوصف**: يعرض قائمة الطلاب المشتركين في الكورس المحدد
 
 #### المعاملات:
+
 - `limit` (اختياري): عدد الطلاب في الصفحة (افتراضي: 50)
 - `skip` (اختياري): عدد الطلاب المراد تخطيها (افتراضي: 0)
 
 #### مثال cURL:
+
 ```bash
 curl -X GET "https://your-host/api/courses/1/students?limit=20&skip=0" \
   -H "Authorization: Bearer <ADMIN_TOKEN>"
 ```
 
 #### الاستجابة:
+
 ```json
 {
   "course": {
@@ -400,18 +443,22 @@ curl -X GET "https://your-host/api/courses/1/students?limit=20&skip=0" \
 ```
 
 ### حذف طالب من الكورس
+
 - **المسار**: `DELETE /api/courses/:id/students/:studentId`
 - **المصادقة**: `Authorization: Bearer <admin_token>`
 - **الوصف**: يحذف الطالب من الكورس (يتم حذف التسجيل نهائياً)
 
 #### مثال cURL:
+
 ```bash
 curl -X DELETE https://your-host/api/courses/1/students/5 \
   -H "Authorization: Bearer <ADMIN_TOKEN>"
 ```
 
 #### الاستجابة:
+
 - **200 OK**:
+
 ```json
 {
   "message": "Student removed from course successfully",
@@ -427,6 +474,7 @@ curl -X DELETE https://your-host/api/courses/1/students/5 \
 ```
 
 - **404 Not Found** (طالب غير موجود أو غير مشترك):
+
 ```json
 {
   "message": "Student not found or not enrolled in this course"
@@ -438,21 +486,25 @@ curl -X DELETE https://your-host/api/courses/1/students/5 \
 ## 5. ملاحظات مهمة
 
 ### الفرق بين أكواد الإدمن والمدرسين:
+
 - **أكواد الإدمن**: استخدام واحد فقط، بدون انتهاء صلاحية
 - **أكواد المدرسين**: يمكن تحديد عدد الاستخدامات وتاريخ الانتهاء
 
 ### الأمان:
+
 - كل كود يستخدم مرة واحدة فقط (للإدمن)
 - التحقق من صحة الكود وانتهاء الصلاحية
 - منع التسجيل المكرر في نفس الكورس
 - تتبع من استخدم الكود ومتى
 
 ### الصلاحيات:
+
 - **الإدمن**: يمكن إنشاء أكواد لأي كورس
 - **المدرس**: يمكن إنشاء أكواد فقط للكورسات في الصفوف المسؤول عنها
 - **الطالب**: يمكن استخدام الأكواد للتسجيل في الكورسات
 
 ### أكواد الاستجابة:
+
 - **200**: نجح الطلب
 - **201**: تم التسجيل بنجاح
 - **204**: تم الحذف بنجاح

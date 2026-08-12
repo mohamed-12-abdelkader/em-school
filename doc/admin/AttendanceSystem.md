@@ -5,6 +5,7 @@
 - التنسيق: JSON إلا إذا ذُكر غير ذلك
 
 ### نماذج البيانات (Schemas)
+
 - المجموعات `groups`:
   - `id`, `admin_id`, `name`, `days` (JSON مثل ["Saturday","Tuesday"]), `start_time` (HH:mm:ss), `end_time` (HH:mm:ss), `created_at`, `updated_at`
 - طلاب المجموعة `group_students`:
@@ -13,7 +14,9 @@
   - `id`, `group_id`, `student_id`, `date` (YYYY-MM-DD), `status` (present|absent), `recorded_by`, `created_at`
 
 ### أخطاء شائعة (Error format)
+
 الاستجابة في الأخطاء تكون غالبًا:
+
 ```json
 { "message": "..." }
 ```
@@ -21,6 +24,7 @@
 ---
 
 ### المجموعات (Groups)
+
 - إنشاء مجموعة
   - POST `/groups`
   - Body:
@@ -34,7 +38,15 @@
     ```
   - Response 201:
     ```json
-    { "group": { "id": 1, "name": "Group A", "days": ["Saturday","Tuesday"], "start_time": "16:00:00", "end_time": "18:00:00" } }
+    {
+      "group": {
+        "id": 1,
+        "name": "Group A",
+        "days": ["Saturday", "Tuesday"],
+        "start_time": "16:00:00",
+        "end_time": "18:00:00"
+      }
+    }
     ```
   - ملاحظات التحقق: `name` إجباري، `days` مصفوفة غير فارغة، `start_time` < `end_time` (منطقيًا).
 
@@ -66,6 +78,7 @@
   - أثر جانبي: حذف الطلاب وسجلات الحضور المرتبطة (Cascade)
 
 أمثلة cURL:
+
 ```bash
 curl -X POST http://localhost:8000/api/groups \
   -H "Authorization: Bearer <ADMIN_TOKEN>" \
@@ -78,6 +91,7 @@ curl -X POST http://localhost:8000/api/groups \
 ### طلاب المجموعة (Group Students)
 
 #### إضافة طالب موجود مسبقًا (من قاعدة البيانات)
+
 - POST `/groups/:id/students/existing`
 - Body:
   ```json
@@ -88,6 +102,7 @@ curl -X POST http://localhost:8000/api/groups \
 - Response 201: `{ "student": { "id": 10, "qr_code": "uuid-...", "qr_code_image": "data:image/png;base64,...", ... } }`
 
 #### إضافة طالب يدويًا (بيانات جديدة)
+
 - POST `/groups/:id/students/manual`
 - Body:
   ```json
@@ -98,25 +113,25 @@ curl -X POST http://localhost:8000/api/groups \
 
 - جلب جميع الطلاب في المجموعة مع حالة الحضور
   - GET `/groups/:id/students`
-  - Response 200: 
+  - Response 200:
     ```json
-    { 
-      "students": [ 
-        { 
-          "id": 10, 
-          "name": "Ahmed Ali", 
-          "phone": "01000000000", 
-          "parent_phone": "01011111111", 
-          "qr_code": "uuid-...", 
+    {
+      "students": [
+        {
+          "id": 10,
+          "name": "Ahmed Ali",
+          "phone": "01000000000",
+          "parent_phone": "01011111111",
+          "qr_code": "uuid-...",
           "qr_code_image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...",
           "attendance_status": "present",
           "attendance_date": "2025-01-27"
-        } 
+        }
       ],
       "date": "2025-01-27"
     }
     ```
-  - ملاحظات: 
+  - ملاحظات:
     - `attendance_status` يمكن أن يكون: `"present"` (حاضر)، `"absent"` (غايب)، أو `"not_taken"` (لم يتم أخذ الغياب بعد)
     - `attendance_date` و `date` يحتويان على تاريخ اليوم الحالي
     - يتم إرجاع حالة الحضور لجميع الطلاب في المجموعة لتاريخ اليوم
@@ -125,7 +140,12 @@ curl -X POST http://localhost:8000/api/groups \
   - PUT `/students/:id`
   - Body (اختياري):
     ```json
-    { "name": "Ahmed M.", "phone": "01022222222", "parent_phone": "01033333333", "student_code": "STD-123" }
+    {
+      "name": "Ahmed M.",
+      "phone": "01022222222",
+      "parent_phone": "01033333333",
+      "student_code": "STD-123"
+    }
     ```
   - Response 200: `{ "student": { ... } }`
 
@@ -136,6 +156,7 @@ curl -X POST http://localhost:8000/api/groups \
 ---
 
 ### الحضور والغياب (Attendance)
+
 - تسجيل يدوي (دفعة)
   - POST `/attendance/manual`
   - Body:
@@ -174,10 +195,16 @@ curl -X POST http://localhost:8000/api/groups \
   - GET `/attendance/stats/:group_id`
   - Response 200:
     ```json
-    { "stats": [ { "student_id": 10, "present": 8, "absent": 2 }, { "student_id": 11, "present": 7, "absent": 3 } ] }
+    {
+      "stats": [
+        { "student_id": 10, "present": 8, "absent": 2 },
+        { "student_id": 11, "present": 7, "absent": 3 }
+      ]
+    }
     ```
 
 أمثلة cURL إضافية:
+
 ```bash
 # إضافة طالب موجود
 curl -X POST http://localhost:8000/api/groups/1/students/existing \
@@ -205,8 +232,8 @@ curl -X POST http://localhost:8000/api/attendance/qr \
 ---
 
 ### ملاحظات عامة
+
 - التحكم في النطاق: كل إدمن يرى ويدير مجموعاته فقط عبر حقل `admin_id`.
 - الحذف المتسلسل: حذف مجموعة يحذف الطلاب وسجلات الحضور المرتبطة (ON DELETE CASCADE).
 - فريد يوميًا: لا يتكرر سجل الحضور لنفس (`group_id`, `student_id`, `date`).
 - الوقت والتواريخ: يقبل `date` بصيغة `YYYY-MM-DD`. يتم استخدام تاريخ اليوم عند عدم الإرسال.
-

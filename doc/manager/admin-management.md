@@ -8,9 +8,11 @@
 - POST `/api/create-admin`
 
 ### الوصف
+
 يسمح للمدير بإنشاء حساب أدمن جديد في النظام.
 
 ### المعاملات المطلوبة:
+
 ```json
 {
   "name": "Admin Name",
@@ -21,10 +23,13 @@
 ```
 
 ### المعاملات الاختيارية:
+
 - `status`: حالة الحساب - `"active"` (نشط) أو `"inactive"` (غير نشط) - الافتراضي: `"active"`
 
 ### الاستجابة:
+
 - 201 Created:
+
 ```json
 {
   "message": "Admin created successfully",
@@ -40,6 +45,7 @@
 ```
 
 - 400 Bad Request (إيميل موجود مسبقاً):
+
 ```json
 {
   "message": "Admin with this email already exists"
@@ -47,6 +53,7 @@
 ```
 
 ### مثال cURL:
+
 ```bash
 curl -X POST https://your-host/api/create-admin \
   -H "Authorization: Bearer <MANAGER_TOKEN>" \
@@ -64,9 +71,11 @@ curl -X POST https://your-host/api/create-admin \
 - PATCH `/api/admin/:id/status`
 
 ### الوصف
+
 يسمح للمدير بتحديث حالة الأدمن (نشط/غير نشط).
 
 ### المعاملات المطلوبة:
+
 ```json
 {
   "status": "inactive"
@@ -74,7 +83,9 @@ curl -X POST https://your-host/api/create-admin \
 ```
 
 ### الاستجابة:
+
 - 200 OK:
+
 ```json
 {
   "message": "Admin status updated to inactive",
@@ -89,6 +100,7 @@ curl -X POST https://your-host/api/create-admin \
 ```
 
 ### مثال cURL:
+
 ```bash
 curl -X PATCH https://your-host/api/admin/3/status \
   -H "Authorization: Bearer <MANAGER_TOKEN>" \
@@ -101,15 +113,19 @@ curl -X PATCH https://your-host/api/admin/3/status \
 - GET `/api/admins`
 
 ### الوصف
+
 يعرض قائمة بجميع الأدمن مع حالتهم.
 
 ### المعاملات الاختيارية:
+
 - `limit`: عدد النتائج (افتراضي: 10)
 - `skip`: عدد النتائج المراد تخطيها (افتراضي: 0)
 - `q`: البحث بالاسم أو الإيميل
 
 ### الاستجابة:
+
 - 200 OK:
+
 ```json
 {
   "admins": [
@@ -132,6 +148,7 @@ curl -X PATCH https://your-host/api/admin/3/status \
 ```
 
 ### مثال cURL:
+
 ```bash
 curl -X GET "https://your-host/api/admins?limit=20&q=admin" \
   -H "Authorization: Bearer <MANAGER_TOKEN>"
@@ -145,5 +162,3 @@ curl -X GET "https://your-host/api/admins?limit=20&q=admin" \
 - **التحقق**: يتم التحقق من صحة البيانات قبل الإنشاء
 - **الحالة**: الحسابات غير النشطة لا يمكنها تسجيل الدخول
 - **الافتراضي**: الحسابات الجديدة تُنشأ بحالة "نشط" افتراضياً
-
-

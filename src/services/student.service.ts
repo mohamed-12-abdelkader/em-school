@@ -38,9 +38,7 @@ function splitFullName(fullName: string): { firstName: string; lastName: string 
   return { firstName: parts[0]!, lastName: parts.slice(1).join(' ') };
 }
 
-function mapParentRelation(
-  relationship: StudentRelationship,
-): 'father' | 'mother' | 'other' {
+function mapParentRelation(relationship: StudentRelationship): 'father' | 'mother' | 'other' {
   if (relationship === 'father' || relationship === 'mother') return relationship;
   return 'other';
 }
@@ -133,8 +131,7 @@ export async function getStudent(studentId: number, schoolId: number) {
 
   const codes = await studentModel.getLoginCodesByStudent(studentId, schoolId);
   const qrPayload =
-    detail.student.qr_code?.trim() ||
-    buildStudentQrPayload(schoolId, detail.student.student_code);
+    detail.student.qr_code?.trim() || buildStudentQrPayload(schoolId, detail.student.student_code);
 
   return {
     student: toStudentResource(detail.student),
@@ -236,14 +233,11 @@ export async function createStudent(
   });
 
   const relationship: StudentRelationship =
-    input.relationship ??
-    (input.parentRelation as StudentRelationship | undefined) ??
-    'father';
-  const parentName = (
-    input.parentName?.trim() ||
-    input.parentFullName?.trim() ||
-    'ولي أمر'
-  ).slice(0, 255);
+    input.relationship ?? (input.parentRelation as StudentRelationship | undefined) ?? 'father';
+  const parentName = (input.parentName?.trim() || input.parentFullName?.trim() || 'ولي أمر').slice(
+    0,
+    255,
+  );
   const parentEmailRaw = input.parentEmail?.trim();
   const parentEmail = parentEmailRaw ? parentEmailRaw : null;
   const studentPhoneRaw = (input.studentPhone ?? input.phone)?.trim();
@@ -554,9 +548,8 @@ export async function deleteStudent(studentId: number, schoolId: number) {
 
   const userId = await studentModel.softDelete(studentId, schoolId);
   if (userId) {
-    await pool.query(
-      `UPDATE users SET status = 'inactive' WHERE id = $1 AND role = 'student'`,
-      [userId],
-    );
+    await pool.query(`UPDATE users SET status = 'inactive' WHERE id = $1 AND role = 'student'`, [
+      userId,
+    ]);
   }
 }

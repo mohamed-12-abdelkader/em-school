@@ -4,11 +4,9 @@ import type { StudentStatus } from '../types/studentAffairs';
 import { buildStudentQrPayload, qrPayloadToPngDataUrl } from '../utils/studentQr';
 import { HttpError } from '../utils';
 import { parsePagination, parsePositiveIntParam } from '../utils/pagination';
+import { getAuthSchoolId } from '../utils/schoolContext';
 
-function parseOptionalPositiveInt(
-  q: Record<string, unknown>,
-  key: string,
-): number | undefined {
+function parseOptionalPositiveInt(q: Record<string, unknown>, key: string): number | undefined {
   const raw = q[key];
   if (raw === undefined || raw === '') return undefined;
   return parsePositiveIntParam(String(raw), key);
@@ -37,12 +35,11 @@ function parseOptionalString(q: Record<string, unknown>, key: string): string | 
 }
 
 export async function listStudents(req: Request, res: Response) {
-  const schoolId = req.user!.id;
+  const schoolId = getAuthSchoolId(req);
   const query = req.query as Record<string, unknown>;
   const { limit, skip } = parsePagination(query);
   const classId =
-    parseOptionalPositiveInt(query, 'classroomId') ??
-    parseOptionalPositiveInt(query, 'classId');
+    parseOptionalPositiveInt(query, 'classroomId') ?? parseOptionalPositiveInt(query, 'classId');
   const gradeId = parseOptionalPositiveInt(query, 'gradeId');
   const academicYearId = parseOptionalPositiveInt(query, 'academicYearId');
   const status = parseOptionalStatus(query);
@@ -63,7 +60,7 @@ export async function listStudents(req: Request, res: Response) {
 }
 
 export async function createStudent(req: Request, res: Response) {
-  const schoolId = req.user!.id;
+  const schoolId = getAuthSchoolId(req);
   const files = req.files as Record<string, Express.Multer.File[] | undefined> | undefined;
   const avatar = files?.avatar?.[0];
   const birthCertificate = files?.birthCertificate?.[0];
@@ -89,19 +86,9 @@ export async function createStudent(req: Request, res: Response) {
     parentFullName: body.parentFullName as string | undefined,
     parentPhone: String(body.parentPhone),
     parentEmail: (body.parentEmail as string | null | undefined) ?? null,
-    relationship: body.relationship as
-      | 'father'
-      | 'mother'
-      | 'guardian'
-      | 'other'
-      | undefined,
+    relationship: body.relationship as 'father' | 'mother' | 'guardian' | 'other' | undefined,
     parentRelation: body.parentRelation as 'father' | 'mother' | 'other' | undefined,
-    status: body.status as
-      | 'active'
-      | 'suspended'
-      | 'graduated'
-      | 'transferred'
-      | undefined,
+    status: body.status as 'active' | 'suspended' | 'graduated' | 'transferred' | undefined,
     password: body.password as string | undefined,
     avatarLocalPath: avatar?.path,
     birthCertificateLocalPath: birthCertificate?.path,
@@ -110,7 +97,7 @@ export async function createStudent(req: Request, res: Response) {
 }
 
 export async function getStudent(req: Request, res: Response) {
-  const schoolId = req.user!.id;
+  const schoolId = getAuthSchoolId(req);
   const studentId = parsePositiveIntParam(req.params.studentId, 'studentId');
   const result = await studentService.getStudent(studentId, schoolId);
   res.json(result);
@@ -118,22 +105,18 @@ export async function getStudent(req: Request, res: Response) {
 
 /** صورة QR جاهزة للطباعة/التحميل (Data URL) + الحمولة النصية */
 export async function getStudentQr(req: Request, res: Response) {
-  const schoolId = req.user!.id;
+  const schoolId = getAuthSchoolId(req);
   const studentId = parsePositiveIntParam(req.params.studentId, 'studentId');
   const result = await studentService.getStudent(studentId, schoolId);
   const publicId = result.student.studentCode;
-  const payload =
-    result.qr?.payload?.trim() || buildStudentQrPayload(schoolId, publicId);
+  const payload = result.qr?.payload?.trim() || buildStudentQrPayload(schoolId, publicId);
   const qrDataUrl = await qrPayloadToPngDataUrl(payload);
   const format = String(req.query.format ?? 'json');
   if (format === 'png') {
     const base64 = qrDataUrl.replace(/^data:image\/png;base64,/, '');
     const buf = Buffer.from(base64, 'base64');
     res.setHeader('Content-Type', 'image/png');
-    res.setHeader(
-      'Content-Disposition',
-      `inline; filename="qr-${publicId}.png"`,
-    );
+    res.setHeader('Content-Disposition', `inline; filename="qr-${publicId}.png"`);
     res.send(buf);
     return;
   }
@@ -150,14 +133,14 @@ export async function getStudentQr(req: Request, res: Response) {
 }
 
 export async function updateStudent(req: Request, res: Response) {
-  const schoolId = req.user!.id;
+  const schoolId = getAuthSchoolId(req);
   const studentId = parsePositiveIntParam(req.params.studentId, 'studentId');
   const student = await studentService.updateStudent(studentId, schoolId, req.body);
   res.json({ student });
 }
 
 export async function deleteStudent(req: Request, res: Response) {
-  const schoolId = req.user!.id;
+  const schoolId = getAuthSchoolId(req);
   const studentId = parsePositiveIntParam(req.params.studentId, 'studentId');
   await studentService.deleteStudent(studentId, schoolId);
   res.status(204).send();

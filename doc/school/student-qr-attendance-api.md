@@ -1,6 +1,6 @@
 # واجهات الطالب — QR، الحضور، كلمة المرور عند أول دخول
 
-**البادئة الأساسية:** جميع المسارات أدناه تُستدعى تحت ` /api ` (مثال: `POST /api/auth/login`).
+**البادئة الأساسية:** جميع المسارات أدناه تُستدعى تحت `/api` (مثال: `POST /api/auth/login`).
 
 **الترويسة للمسارات المحمية:**
 
@@ -13,23 +13,24 @@ Content-Type: application/json
 
 ## 1) المصادقة العامة
 
-### `POST /api/auth/login`  
+### `POST /api/auth/login`
+
 أيضاً: `POST /api/login` (نفس المنطق).
 
 **Body (JSON):**
 
-| الحقل      | النوع  | الوصف |
-|-----------|--------|--------|
+| الحقل      | النوع  | الوصف                                                          |
+| ---------- | ------ | -------------------------------------------------------------- |
 | `username` | string | بريد أو `username` (كود الطالب/ولي الأمر) أو هاتف حسب المستخدم |
-| `password` | string | كلمة المرور |
+| `password` | string | كلمة المرور                                                    |
 
 **Response 200:**
 
-| الحقل | الوصف |
-|--------|--------|
-| `token` | JWT |
+| الحقل                | الوصف                                                                  |
+| -------------------- | ---------------------------------------------------------------------- |
+| `token`              | JWT                                                                    |
 | `mustChangePassword` | `true` إذا كان يجب تغيير كلمة المرور (حسابات طالب/ولي أمر جديدة عادةً) |
-| `user` | `{ id, name, email, role, description, logo }` |
+| `user`               | `{ id, name, email, role, description, logo }`                         |
 
 ---
 
@@ -39,10 +40,10 @@ Content-Type: application/json
 
 **Response 200:**
 
-| الحقل | الوصف |
-|--------|--------|
-| `mustChangePassword` | boolean |
-| `user` | `{ id, name, email, role, description, logo, status, created_at }` |
+| الحقل                | الوصف                                                              |
+| -------------------- | ------------------------------------------------------------------ |
+| `mustChangePassword` | boolean                                                            |
+| `user`               | `{ id, name, email, role, description, logo, status, created_at }` |
 
 ---
 
@@ -52,17 +53,17 @@ Content-Type: application/json
 
 **Body (JSON):**
 
-| الحقل | النوع | القيود |
-|--------|--------|--------|
-| `oldPassword` | string | مطلوب |
+| الحقل         | النوع  | القيود               |
+| ------------- | ------ | -------------------- |
+| `oldPassword` | string | مطلوب                |
 | `newPassword` | string | **8 أحرف على الأقل** |
 
 **Response 200:**
 
-| الحقل | الوصف |
-|--------|--------|
-| `token` | JWT جديد |
-| `mustChangePassword` | `false` |
+| الحقل                | الوصف    |
+| -------------------- | -------- |
+| `token`              | JWT جديد |
+| `mustChangePassword` | `false`  |
 
 ---
 
@@ -78,8 +79,8 @@ Content-Type: application/json
 
 **Body (JSON):**
 
-| الحقل | النوع | الوصف |
-|--------|--------|--------|
+| الحقل | النوع  | الوصف                                                                               |
+| ----- | ------ | ----------------------------------------------------------------------------------- |
 | `raw` | string | النص الكامل المقروء من QR (JSON مثل `{"v":1,"schoolId":1,"studentId":"STU-1-..."}`) |
 
 **Response 201:**
@@ -110,13 +111,13 @@ Content-Type: application/json
 
 **Query (اختياري):**
 
-| المعامل | الوصف |
-|---------|--------|
-| `from` | تاريخ بداية `YYYY-MM-DD` |
-| `to` | تاريخ نهاية `YYYY-MM-DD` |
+| المعامل     | الوصف                                          |
+| ----------- | ---------------------------------------------- |
+| `from`      | تاريخ بداية `YYYY-MM-DD`                       |
+| `to`        | تاريخ نهاية `YYYY-MM-DD`                       |
 | `studentId` | الرقم الداخلي للطالب في النظام (`students.id`) |
-| `limit` | افتراضي `20`، أقصى `100` |
-| `skip` | إزاحة للصفحات (افتراضي `0`) |
+| `limit`     | افتراضي `20`، أقصى `100`                       |
+| `skip`      | إزاحة للصفحات (افتراضي `0`)                    |
 
 **Response 200:**
 
@@ -169,8 +170,8 @@ Content-Type: application/json
 
 **Query:**
 
-| المعامل | الوصف |
-|---------|--------|
+| المعامل  | الوصف                                                                        |
+| -------- | ---------------------------------------------------------------------------- |
 | `format` | غير محدد أو `json` → JSON يحتوي Data URL؛ `png` → استجابة `image/png` مباشرة |
 
 **Response عند `format=json` أو بدون format (200):**
@@ -217,13 +218,13 @@ Content-Type: application/json
 
 **Query (اختياري):**
 
-| المعامل | الوصف |
-|---------|--------|
+| المعامل     | الوصف                                                |
+| ----------- | ---------------------------------------------------- |
 | `studentId` | الرقم الداخلي للطالب (`students.id`) لتصفية ابن محدد |
-| `from` | `YYYY-MM-DD` |
-| `to` | `YYYY-MM-DD` |
-| `limit` | افتراضي `20`، أقصى `100` |
-| `skip` | افتراضي `0` |
+| `from`      | `YYYY-MM-DD`                                         |
+| `to`        | `YYYY-MM-DD`                                         |
+| `limit`     | افتراضي `20`، أقصى `100`                             |
+| `skip`      | افتراضي `0`                                          |
 
 **Response 200:**
 
@@ -271,13 +272,13 @@ Content-Type: application/json
 
 ## 5) ملخص مسارات سريع
 
-| الطريقة | المسار | الدور |
-|--------|--------|--------|
-| `POST` | `/api/auth/login` | عام |
-| `GET` | `/api/auth/me` | أي مستخدم مسجّل |
-| `PATCH` | `/api/auth/password` | أي مستخدم مسجّل |
-| `POST` | `/api/school/attendance/scan` | school |
-| `GET` | `/api/school/attendance` | school |
-| `GET` | `/api/school/students/:studentId/attendance-days` | school |
-| `GET` | `/api/school/students/:studentId/qr` | school |
-| `GET` | `/api/parent/attendance` | parent |
+| الطريقة | المسار                                            | الدور           |
+| ------- | ------------------------------------------------- | --------------- |
+| `POST`  | `/api/auth/login`                                 | عام             |
+| `GET`   | `/api/auth/me`                                    | أي مستخدم مسجّل |
+| `PATCH` | `/api/auth/password`                              | أي مستخدم مسجّل |
+| `POST`  | `/api/school/attendance/scan`                     | school          |
+| `GET`   | `/api/school/attendance`                          | school          |
+| `GET`   | `/api/school/students/:studentId/attendance-days` | school          |
+| `GET`   | `/api/school/students/:studentId/qr`              | school          |
+| `GET`   | `/api/parent/attendance`                          | parent          |

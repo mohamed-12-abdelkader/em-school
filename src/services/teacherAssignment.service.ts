@@ -203,12 +203,7 @@ export async function deleteAssignment(assignmentId: number, schoolId: number) {
   const ok = await assignmentModel.softDelete(assignmentId, schoolId);
   if (!ok) throw new HttpError(404, 'Assignment not found');
 
-  await syncTeacherClassLink(
-    schoolId,
-    existing.teacher_id,
-    existing.classroom_id,
-    'remove',
-  );
+  await syncTeacherClassLink(schoolId, existing.teacher_id, existing.classroom_id, 'remove');
 }
 
 export async function listAssignmentsForTeacherUser(schoolId: number, teacherId: number) {

@@ -118,10 +118,10 @@ export async function update(
 }
 
 export async function remove(id: number, schoolId: number): Promise<boolean> {
-  const r = await pool.query(
-    `DELETE FROM academic_years WHERE id = $1 AND school_id = $2`,
-    [id, schoolId],
-  );
+  const r = await pool.query(`DELETE FROM academic_years WHERE id = $1 AND school_id = $2`, [
+    id,
+    schoolId,
+  ]);
   return (r.rowCount ?? 0) > 0;
 }
 

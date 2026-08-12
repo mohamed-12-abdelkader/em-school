@@ -8,5 +8,7 @@ export default defineConfig({
         singleFork: true,
       },
     },
+    include: ['src/tests/**/*.test.ts'],
+    fileParallelism: false,
   },
 });

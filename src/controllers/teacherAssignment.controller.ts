@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import * as teacherAssignmentService from '../services/teacherAssignment.service';
 import { parsePagination, parsePositiveIntParam } from '../utils/pagination';
+import { getAuthSchoolId } from '../utils/schoolContext';
 
 function parseOptionalInt(q: Record<string, unknown>, key: string): number | undefined {
   const raw = q[key];
@@ -9,7 +10,7 @@ function parseOptionalInt(q: Record<string, unknown>, key: string): number | und
 }
 
 export async function listAssignments(req: Request, res: Response) {
-  const schoolId = req.user!.id;
+  const schoolId = getAuthSchoolId(req);
   const query = req.query as Record<string, unknown>;
   const { limit, skip } = parsePagination(query);
 
@@ -27,14 +28,14 @@ export async function listAssignments(req: Request, res: Response) {
 }
 
 export async function getAssignment(req: Request, res: Response) {
-  const schoolId = req.user!.id;
+  const schoolId = getAuthSchoolId(req);
   const assignmentId = parsePositiveIntParam(req.params.assignmentId, 'assignmentId');
   const assignment = await teacherAssignmentService.getAssignment(assignmentId, schoolId);
   res.json({ assignment });
 }
 
 export async function createAssignment(req: Request, res: Response) {
-  const schoolId = req.user!.id;
+  const schoolId = getAuthSchoolId(req);
   const body = req.body as {
     academicYearId: number;
     teacherId: number;
@@ -47,7 +48,7 @@ export async function createAssignment(req: Request, res: Response) {
 }
 
 export async function updateAssignment(req: Request, res: Response) {
-  const schoolId = req.user!.id;
+  const schoolId = getAuthSchoolId(req);
   const assignmentId = parsePositiveIntParam(req.params.assignmentId, 'assignmentId');
   const assignment = await teacherAssignmentService.updateAssignment(
     assignmentId,
@@ -58,7 +59,7 @@ export async function updateAssignment(req: Request, res: Response) {
 }
 
 export async function deleteAssignment(req: Request, res: Response) {
-  const schoolId = req.user!.id;
+  const schoolId = getAuthSchoolId(req);
   const assignmentId = parsePositiveIntParam(req.params.assignmentId, 'assignmentId');
   await teacherAssignmentService.deleteAssignment(assignmentId, schoolId);
   res.status(204).send();

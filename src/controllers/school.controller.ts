@@ -2,7 +2,6 @@ import type { Request, Response } from 'express';
 import * as schoolService from '../services/school.service';
 import { HttpError } from '../utils';
 import { parsePagination, parsePositiveIntParam } from '../utils/pagination';
-
 function parseOptionalQ(q: Record<string, unknown>): string | undefined {
   const raw = q.q;
   if (typeof raw !== 'string' || !raw.trim()) return undefined;
@@ -18,35 +17,49 @@ export async function listSchools(req: Request, res: Response) {
 
 export async function getSchool(req: Request, res: Response) {
   const schoolId = parsePositiveIntParam(req.params.schoolId, 'schoolId');
-  const school = await schoolService.getSchoolForAdmin(schoolId);
-  res.json({ school });
+  const result = await schoolService.getSchoolForAdmin(schoolId);
+  res.json(result);
+}
+
+export async function getSchoolAdmin(req: Request, res: Response) {
+  const schoolId = parsePositiveIntParam(req.params.schoolId, 'schoolId');
+  const admin = await schoolService.getSchoolAdminForAdmin(schoolId);
+  res.json({ admin });
 }
 
 export async function createSchool(req: Request, res: Response) {
-  if (!req.file) {
-    throw new HttpError(400, 'Logo file is required (field name: logo)');
-  }
-
-  const { name, description, email, password, address, contactPhone } = req.body as {
-    name: string;
-    description?: string;
-    email: string;
-    password: string;
-    address?: string;
-    contactPhone?: string;
+  const body = req.body as {
+    school: {
+      name: string;
+      description?: string;
+      logo?: string;
+      address?: string;
+      contactPhone?: string;
+    };
+    admin: {
+      email: string;
+      password: string;
+      name?: string;
+    };
   };
 
-  const school = await schoolService.createSchoolAccount({
-    name,
-    description: description ?? null,
-    email,
-    password,
-    logoFilePath: req.file.path,
-    address: address ?? null,
-    contactPhone: contactPhone ?? null,
+  const result = await schoolService.createSchoolAccount({
+    school: {
+      name: body.school.name,
+      description: body.school.description ?? null,
+      logoUrl: body.school.logo ?? null,
+      address: body.school.address ?? null,
+      contactPhone: body.school.contactPhone ?? null,
+    },
+    admin: {
+      email: body.admin.email,
+      password: body.admin.password,
+      name: body.admin.name,
+    },
+    logoFilePath: req.file?.path,
   });
 
-  res.status(201).json({ school });
+  res.status(201).json(result);
 }
 
 export async function updateSchool(req: Request, res: Response) {
@@ -54,9 +67,9 @@ export async function updateSchool(req: Request, res: Response) {
   const body = req.body as {
     name?: string;
     description?: string | null;
-    email?: string;
     address?: string | null;
     contactPhone?: string | null;
+    logo?: string;
   };
 
   if (!req.file && Object.keys(body).length === 0) {
@@ -64,7 +77,11 @@ export async function updateSchool(req: Request, res: Response) {
   }
 
   const school = await schoolService.updateSchoolForAdmin(schoolId, {
-    ...body,
+    name: body.name,
+    description: body.description,
+    address: body.address,
+    contactPhone: body.contactPhone,
+    logoUrl: body.logo,
     logoFilePath: req.file?.path,
   });
   res.json({ school });
@@ -72,11 +89,11 @@ export async function updateSchool(req: Request, res: Response) {
 
 export async function updateSchoolStatus(req: Request, res: Response) {
   const schoolId = parsePositiveIntParam(req.params.schoolId, 'schoolId');
-  const { action } = req.body as {
-    action: 'activate' | 'suspend' | 'soft-delete';
+  const { status } = req.body as {
+    status: 'active' | 'suspended' | 'deleted';
   };
-  const school = await schoolService.updateSchoolStatusForAdmin(schoolId, action);
-  res.json({ school });
+  const result = await schoolService.updateSchoolStatusForAdmin(schoolId, status);
+  res.json(result);
 }
 
 export async function createRegistrationCode(req: Request, res: Response) {

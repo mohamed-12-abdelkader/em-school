@@ -202,12 +202,8 @@ export async function findDetailByIdAndSchool(
           is_current: Boolean(row.ay_current),
         }
       : null,
-    grade: row.g_id
-      ? { id: row.g_id, name: row.g_name!, stage: row.g_stage! }
-      : null,
-    classroom: row.c_id
-      ? { id: row.c_id, name: row.c_name!, capacity: row.c_capacity }
-      : null,
+    grade: row.g_id ? { id: row.g_id, name: row.g_name!, stage: row.g_stage! } : null,
+    classroom: row.c_id ? { id: row.c_id, name: row.c_name!, capacity: row.c_capacity } : null,
     parent: {
       name: row.parent_name,
       phone: row.parent_phone,
@@ -235,10 +231,7 @@ export async function findBySchoolAndPublicStudentId(
 }
 
 /** Atomically allocate next ST-{year}-{seq} code for the school */
-export async function allocateStudentCode(
-  schoolId: number,
-  yearKey: number,
-): Promise<string> {
+export async function allocateStudentCode(schoolId: number, yearKey: number): Promise<string> {
   const r = await pool.query<{ last_value: number }>(
     `INSERT INTO student_code_sequences (school_id, year_key, last_value)
      VALUES ($1, $2, 1)

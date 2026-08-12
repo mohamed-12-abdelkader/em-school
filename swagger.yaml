@@ -200,9 +200,135 @@ components:
           type: string
           minLength: 8
 
+    SchoolOrganization:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        logo:
+          type: string
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        contactPhone:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [active, suspended, deleted]
+        created_at:
+          type: string
+          format: date-time
+        registrationCode:
+          $ref: '#/components/schemas/RegistrationCode'
+
+    SchoolAdminUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          type: string
+          enum: [school_admin]
+        schoolId:
+          type: integer
+        status:
+          type: string
+          nullable: true
+
+    SchoolListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        logo:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [active, suspended, deleted]
+
+    RegistrationCode:
+      type: object
+      properties:
+        id:
+          type: integer
+        schoolId:
+          type: integer
+        code:
+          type: string
+        status:
+          type: string
+          enum: [active, revoked]
+        created_at:
+          type: string
+          format: date-time
+        revoked_at:
+          type: string
+          format: date-time
+          nullable: true
+
     CreateSchoolRequest:
       type: object
-      required: [name, email, password, logo]
+      description: |
+        Nested school organization + admin user.
+        Multipart: send `logo` file and either nested fields
+        (`school[name]`, `admin[email]`, …) or flat legacy fields (`name`, `email`, `password`).
+        JSON: send nested `school` / `admin` with `school.logo` as a URL (no file).
+      required: [school, admin]
+      properties:
+        school:
+          type: object
+          required: [name]
+          properties:
+            name:
+              type: string
+              minLength: 2
+              maxLength: 200
+            description:
+              type: string
+              maxLength: 2000
+            logo:
+              type: string
+              description: Logo URL when not uploading a file
+            address:
+              type: string
+            contactPhone:
+              type: string
+        admin:
+          type: object
+          required: [email, password]
+          properties:
+            email:
+              type: string
+              format: email
+            password:
+              type: string
+              minLength: 8
+            name:
+              type: string
+              description: Optional display name (defaults to school name)
+        logo:
+          type: string
+          format: binary
+          description: Multipart logo file (required unless school.logo URL is provided)
+
+    UpdateSchoolRequest:
+      type: object
+      description: Partial school organization update (no admin email/password)
       properties:
         name:
           type: string
@@ -210,21 +336,53 @@ components:
           maxLength: 200
         description:
           type: string
-          maxLength: 2000
-        email:
-          type: string
-          format: email
-        password:
-          type: string
-          minLength: 8
+          nullable: true
         address:
           type: string
+          nullable: true
         contactPhone:
           type: string
+          nullable: true
         logo:
+          oneOf:
+            - type: string
+              format: uri
+            - type: string
+              format: binary
+
+    UpdateSchoolStatusRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
           type: string
-          format: binary
-          description: Required multipart file field `logo`
+          enum: [active, suspended, deleted]
+
+    AdminDashboard:
+      type: object
+      properties:
+        schoolsCount:
+          type: integer
+        usersPerSchool:
+          type: array
+          items:
+            type: object
+            properties:
+              schoolId:
+                type: integer
+              schoolName:
+                type: string
+              usersCount:
+                type: integer
+        statusBreakdown:
+          type: object
+          properties:
+            active:
+              type: integer
+            suspended:
+              type: integer
+            deleted:
+              type: integer
 
     AcademicYearCreate:
       type: object
@@ -719,7 +877,8 @@ paths:
   /admin/schools:
     get:
       tags: [Admin]
-      summary: List schools
+      summary: List school organizations
+      description: Returns organization records only (no admin email/password).
       security:
         - bearerAuth: []
       parameters:
@@ -729,11 +888,34 @@ paths:
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SchoolListItem'
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      limit:
+                        type: integer
+                      skip:
+                        type: integer
+                      hasMore:
+                        type: boolean
         '403':
           description: Admin only
     post:
       tags: [Admin]
-      summary: Create school (multipart + logo; issues registration code)
+      summary: Create school organization + school_admin user
+      description: |
+        Creates a `schools` row and a separate `users` row with role `school_admin`
+        linked via `school_id`. Issues an active registration code.
       security:
         - bearerAuth: []
       requestBody:
@@ -742,16 +924,30 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/CreateSchoolRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSchoolRequest'
       responses:
         '201':
           description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  school:
+                    $ref: '#/components/schemas/SchoolOrganization'
+                  admin:
+                    $ref: '#/components/schemas/SchoolAdminUser'
         '400':
           description: Logo required or validation error
+        '409':
+          description: Email already in use
 
   /admin/schools/{schoolId}:
     get:
       tags: [Admin]
-      summary: Get school details
+      summary: Get school organization (+ admin summary)
       security:
         - bearerAuth: []
       parameters:
@@ -759,11 +955,22 @@ paths:
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  school:
+                    $ref: '#/components/schemas/SchoolOrganization'
+                  admin:
+                    allOf:
+                      - $ref: '#/components/schemas/SchoolAdminUser'
+                    nullable: true
         '404':
-          description: Not found
+          description: School not found
     put:
       tags: [Admin]
-      summary: Update school profile
+      summary: Update school organization profile
       security:
         - bearerAuth: []
       parameters:
@@ -772,29 +979,48 @@ paths:
         content:
           multipart/form-data:
             schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                description:
-                  type: string
-                email:
-                  type: string
-                address:
-                  type: string
-                contactPhone:
-                  type: string
-                logo:
-                  type: string
-                  format: binary
+              $ref: '#/components/schemas/UpdateSchoolRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSchoolRequest'
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  school:
+                    $ref: '#/components/schemas/SchoolOrganization'
+        '404':
+          description: School not found
+
+  /admin/schools/{schoolId}/admin:
+    get:
+      tags: [Admin]
+      summary: Get linked school_admin user
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SchoolId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  admin:
+                    $ref: '#/components/schemas/SchoolAdminUser'
+        '404':
+          description: School or admin not found
 
   /admin/schools/{schoolId}/status:
     patch:
       tags: [Admin]
-      summary: activate | suspend | soft-delete
+      summary: Set school status (active | suspended | deleted)
       security:
         - bearerAuth: []
       parameters:
@@ -804,15 +1030,23 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [action]
-              properties:
-                action:
-                  type: string
-                  enum: [activate, suspend, soft-delete]
+              $ref: '#/components/schemas/UpdateSchoolStatusRequest'
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, status]
+                properties:
+                  id:
+                    type: integer
+                  status:
+                    type: string
+                    enum: [active, suspended, deleted]
+        '404':
+          description: School not found
 
   /admin/schools/{schoolId}/registration-code:
     post:
@@ -825,8 +1059,22 @@ paths:
       responses:
         '200':
           description: Existing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  registrationCode:
+                    $ref: '#/components/schemas/RegistrationCode'
         '201':
           description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  registrationCode:
+                    $ref: '#/components/schemas/RegistrationCode'
 
   /admin/schools/{schoolId}/registration-code/regenerate:
     post:
@@ -839,6 +1087,13 @@ paths:
       responses:
         '201':
           description: New code
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  registrationCode:
+                    $ref: '#/components/schemas/RegistrationCode'
 
   /admin/dashboard:
     get:
@@ -849,6 +1104,10 @@ paths:
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminDashboard'
 
   /school/academic-years:
     get:

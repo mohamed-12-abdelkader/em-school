@@ -42,8 +42,14 @@ export const createStudentEnrollmentSchema = z
     dateOfBirth: dateString.optional(),
     nationalId: nationalIdSchema,
     address: z.string().trim().max(2000).optional().nullable(),
-    studentPhone: z.union([phoneSchema, z.literal('')]).optional().nullable(),
-    phone: z.union([phoneSchema, z.literal('')]).optional().nullable(),
+    studentPhone: z
+      .union([phoneSchema, z.literal('')])
+      .optional()
+      .nullable(),
+    phone: z
+      .union([phoneSchema, z.literal('')])
+      .optional()
+      .nullable(),
     /** إن لم يُرسل تُستخدم السنة الدراسية الحالية للمدرسة */
     academicYearId: z.coerce.number().int().positive().optional(),
     gradeId: z.coerce.number().int().positive(),

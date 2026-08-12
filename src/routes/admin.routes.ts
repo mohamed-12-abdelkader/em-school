@@ -6,6 +6,7 @@ import { uploadSchoolLogo } from '../config/upload';
 import * as schoolController from '../controllers/school.controller';
 import {
   createSchoolSchema,
+  normalizeCreateSchoolBody,
   updateSchoolSchema,
   updateSchoolStatusSchema,
 } from '../validators/school.validator';
@@ -13,6 +14,15 @@ import {
 const router = Router();
 
 const adminOnly = authMiddleware(['admin']);
+
+function normalizeCreateSchoolBodyMiddleware(
+  req: import('express').Request,
+  _res: import('express').Response,
+  next: import('express').NextFunction,
+) {
+  req.body = normalizeCreateSchoolBody((req.body ?? {}) as Record<string, unknown>);
+  next();
+}
 
 router.get('/dashboard', adminOnly, asyncWrapper(schoolController.getDashboard));
 
@@ -23,12 +33,15 @@ router.post(
   '/schools',
   adminOnly,
   uploadSchoolLogo.single('logo'),
+  normalizeCreateSchoolBodyMiddleware,
   validate(createSchoolSchema),
   asyncWrapper(schoolController.createSchool),
 );
 
 /** تفاصيل مدرسة واحدة */
 router.get('/schools/:schoolId', adminOnly, asyncWrapper(schoolController.getSchool));
+
+router.get('/schools/:schoolId/admin', adminOnly, asyncWrapper(schoolController.getSchoolAdmin));
 
 router.put(
   '/schools/:schoolId',

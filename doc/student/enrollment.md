@@ -8,10 +8,12 @@
 - POST `/student/enroll`
 
 #### الحقول المطلوبة:
+
 - `course_id` (رقم): معرف الكورس
 - `code` (نص): كود التفعيل
 
 #### مثال الطلب:
+
 ```json
 {
   "course_id": 1,
@@ -20,7 +22,9 @@
 ```
 
 #### الاستجابة:
+
 - 201 Created:
+
 ```json
 {
   "message": "Successfully enrolled in course"
@@ -28,6 +32,7 @@
 ```
 
 - 400 Bad Request (كود غير صحيح):
+
 ```json
 {
   "message": "Invalid invite code"
@@ -35,6 +40,7 @@
 ```
 
 - 400 Bad Request (كود منتهي الصلاحية):
+
 ```json
 {
   "message": "Invite code has expired"
@@ -42,6 +48,7 @@
 ```
 
 - 400 Bad Request (كود وصل للحد الأقصى):
+
 ```json
 {
   "message": "Invite code has reached maximum uses"
@@ -49,6 +56,7 @@
 ```
 
 - 400 Bad Request (مسجل مسبقاً):
+
 ```json
 {
   "message": "You are already enrolled in this course"
@@ -60,6 +68,7 @@
 - GET `/student/enrolled-courses`
 
 #### الاستجابة:
+
 ```json
 {
   "courses": [
@@ -97,4 +106,3 @@ curl -X GET https://your-host/api/student/enrolled-courses \
 - لا يمكن التسجيل في نفس الكورس مرتين
 - الكود يجب أن يكون صالح وغير منتهي الصلاحية
 - الكود يجب ألا يكون وصل للحد الأقصى من الاستخدامات
-
