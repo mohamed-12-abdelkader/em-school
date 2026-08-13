@@ -100,3 +100,6 @@ export const updateSchoolSchema = z.object({
 export const updateSchoolStatusSchema = z.object({
   status: z.enum(['active', 'suspended', 'deleted']),
 });
+
+/** School Admin self-service org profile (session school_id, never from body). */
+export const schoolSettingsSchema = updateSchoolSchema;

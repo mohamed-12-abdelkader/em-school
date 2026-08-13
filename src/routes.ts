@@ -4,6 +4,7 @@ import { validate } from './middleware/validateReq';
 import authRoutes from './routes/auth.routes';
 import adminRoutes from './routes/admin.routes';
 import schoolPortalRoutes from './routes/school.routes';
+import schoolAdminRoutes from './routes/schoolAdmin.routes';
 import parentPortalRoutes from './routes/parent.routes';
 import teacherPortalRoutes from './routes/teacher.routes';
 import * as authController from './controllers/auth.controller';
@@ -14,6 +15,7 @@ export const router = Router();
 router.use('/auth', authRoutes);
 router.use('/admin', adminRoutes);
 router.use('/school', schoolPortalRoutes);
+router.use('/school-admin', schoolAdminRoutes);
 router.use('/parent', parentPortalRoutes);
 router.use('/teacher', teacherPortalRoutes);
 

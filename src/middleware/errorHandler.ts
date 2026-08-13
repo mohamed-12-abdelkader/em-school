@@ -5,6 +5,7 @@ import { HttpError, logger } from '../utils';
 interface ErrorBody {
   status: number;
   message: string;
+  error: string;
   name: string;
 }
 
@@ -17,14 +18,29 @@ const errorHandler = (err: Error, req: Request, res: Response<ErrorBody>, _: Nex
 
   if (err instanceof HttpError) {
     logger.warn(err, loggerMsg);
-    res.status(err.status).send({ status: err.status, message: err.message, name: err.name });
+    res.status(err.status).send({
+      status: err.status,
+      message: err.message,
+      error: err.message,
+      name: err.name,
+    });
     return;
   } else if (err instanceof ZodError) {
     logger.warn(err, loggerMsg);
-    res.status(400).send({ status: 400, message: 'Invalid request', name: 'ZodError' });
+    res.status(400).send({
+      status: 400,
+      message: 'Invalid request',
+      error: 'Invalid request',
+      name: 'ZodError',
+    });
     return;
   } else if (err instanceof Error && err.message === 'Only image files are allowed') {
-    res.status(400).send({ status: 400, message: err.message, name: 'BadRequest' });
+    res.status(400).send({
+      status: 400,
+      message: err.message,
+      error: err.message,
+      name: 'BadRequest',
+    });
     return;
   }
 
@@ -32,6 +48,7 @@ const errorHandler = (err: Error, req: Request, res: Response<ErrorBody>, _: Nex
   res.status(500).send({
     status: 500,
     message: 'Something went wrong',
+    error: 'Something went wrong',
     name: 'InternalServerError',
   });
 };

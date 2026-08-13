@@ -4,6 +4,10 @@ import pool from '../db/pool';
 import * as schoolModel from '../models/school.model';
 import * as userModel from '../models/user.model';
 import * as registrationCodeModel from '../models/registrationCode.model';
+import * as studentModel from '../models/student.model';
+import * as schoolClassModel from '../models/schoolClass.model';
+import * as schoolTeacherModel from '../models/schoolTeacher.model';
+import * as feeModel from '../models/fee.model';
 import {
   toRegistrationCodeResource,
   toSchoolAdminResource,
@@ -234,4 +238,61 @@ export async function getAdminDashboard() {
     schoolModel.countByStatus(),
   ]);
   return { schoolsCount, usersPerSchool, statusBreakdown };
+}
+
+/** School Admin overview — scoped to the authenticated school. */
+export async function getSchoolPortalDashboard(schoolId: number) {
+  const school = await schoolModel.findById(schoolId);
+  if (!school || school.status === 'deleted') {
+    throw new HttpError(404, 'School not found');
+  }
+
+  const [studentsCount, classesCount, teachersCount, pendingFees] = await Promise.all([
+    studentModel.countBySchool(schoolId, {}),
+    schoolClassModel.countBySchool(schoolId),
+    schoolTeacherModel.countBySchool(schoolId, {}),
+    feeModel.sumPendingBySchool(schoolId),
+  ]);
+
+  return { studentsCount, classesCount, teachersCount, pendingFees };
+}
+
+export async function getOwnSchoolSettings(schoolId: number) {
+  const row = await schoolModel.findById(schoolId);
+  if (!row || row.status === 'deleted') {
+    throw new HttpError(404, 'School not found');
+  }
+  return toSchoolResource(row);
+}
+
+export async function updateOwnSchoolSettings(
+  schoolId: number,
+  input: {
+    name?: string;
+    description?: string | null;
+    address?: string | null;
+    contactPhone?: string | null;
+    logoUrl?: string;
+    logoFilePath?: string;
+  },
+) {
+  const existing = await schoolModel.findById(schoolId);
+  if (!existing || existing.status === 'deleted') {
+    throw new HttpError(404, 'School not found');
+  }
+
+  let logoUrl = input.logoUrl;
+  if (input.logoFilePath) {
+    logoUrl = await uploadToCloudinary(input.logoFilePath);
+  }
+
+  const updated = await schoolModel.updateSchool(schoolId, {
+    name: input.name,
+    description: input.description,
+    address: input.address,
+    contactPhone: input.contactPhone,
+    logoUrl,
+  });
+  if (!updated) throw new HttpError(404, 'School not found');
+  return toSchoolResource(updated);
 }

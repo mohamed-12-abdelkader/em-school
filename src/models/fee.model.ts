@@ -197,3 +197,15 @@ export async function markInstallmentPaid(
     client.release();
   }
 }
+
+/** Remaining unpaid tuition for non-deleted students in a school. */
+export async function sumPendingBySchool(schoolId: number): Promise<number> {
+  const r = await pool.query<{ remaining: string }>(
+    `SELECT COALESCE(SUM(f.remaining_amount), 0)::text AS remaining
+     FROM fees f
+     JOIN students s ON s.id = f.student_id
+     WHERE s.school_id = $1 AND s.deleted_at IS NULL`,
+    [schoolId],
+  );
+  return Number(r.rows[0]?.remaining ?? 0);
+}

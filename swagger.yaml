@@ -8,7 +8,7 @@ info:
 
     **Auth:** `Authorization: Bearer <JWT>` after login.
 
-    Roles: `admin` | `school` | `teacher` | `parent` | `student` | `manager`
+    Roles: `admin` | `school` | `school_admin` | `student_affairs` | `teacher` | `parent` | `student` | `manager`
   version: 0.0.1
   contact:
     name: EM School
@@ -22,6 +22,8 @@ servers:
 tags:
   - name: Auth
   - name: Admin
+  - name: School — Portal
+  - name: School Admin — Staff
   - name: School — Academic Years
   - name: School — Students
   - name: School — Attendance
@@ -130,6 +132,8 @@ components:
       properties:
         message:
           type: string
+        error:
+          type: string
       required: [message]
 
     Pagination:
@@ -146,11 +150,14 @@ components:
 
     LoginRequest:
       type: object
-      required: [username, password]
+      required: [password]
       properties:
+        login:
+          type: string
+          description: Email or phone (preferred)
         username:
           type: string
-          description: Email, username, or phone
+          description: Legacy alias of login (email, username, or phone)
         password:
           type: string
 
@@ -176,7 +183,10 @@ components:
           nullable: true
         role:
           type: string
-          enum: [admin, school, student, teacher, manager, parent]
+          enum: [admin, school, school_admin, student_affairs, student, teacher, manager, parent]
+        schoolId:
+          type: integer
+          nullable: true
         description:
           type: string
           nullable: true
@@ -383,6 +393,63 @@ components:
               type: integer
             deleted:
               type: integer
+
+    SchoolDashboard:
+      type: object
+      required: [studentsCount, classesCount, teachersCount]
+      properties:
+        studentsCount:
+          type: integer
+        classesCount:
+          type: integer
+        teachersCount:
+          type: integer
+        pendingFees:
+          type: number
+          description: Remaining unpaid tuition for this school (Module 4C)
+
+    StaffCreate:
+      type: object
+      required: [name, email, phone, password]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        password:
+          type: string
+          minLength: 8
+
+    Staff:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        role:
+          type: string
+          enum: [student_affairs]
+        schoolId:
+          type: integer
+        status:
+          type: string
+          enum: [active, inactive]
+
+    UpdateStaffStatusRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [active, inactive]
 
     AcademicYearCreate:
       type: object
@@ -873,6 +940,117 @@ paths:
                     type: boolean
         '401':
           description: Wrong current password
+
+  /school/dashboard:
+    get:
+      tags: [School — Portal]
+      summary: School Admin overview (own school only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchoolDashboard'
+        '401':
+          description: Unauthorized
+        '403':
+          description: School admin only
+
+  /school/settings:
+    get:
+      tags: [School — Portal]
+      summary: Get own school organization profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Organization record (not the admin User)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchoolOrganization'
+    put:
+      tags: [School — Portal]
+      summary: Self-service edit of own school profile
+      description: |
+        `school_id` comes from the JWT session, never from the body or path.
+        Updates the `schools` organization row only — not the school_admin User.
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSchoolRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UpdateSchoolRequest'
+      responses:
+        '200':
+          description: Updated school organization
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchoolOrganization'
+
+  /school-admin/staff:
+    post:
+      tags: [School Admin — Staff]
+      summary: Create Student Affairs staff
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Staff'
+        '409':
+          description: Email or phone already in use
+
+  /school-admin/staff/{id}/status:
+    patch:
+      tags: [School Admin — Staff]
+      summary: Activate or deactivate staff
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStaffStatusRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  status:
+                    type: string
+                    enum: [active, inactive]
+        '404':
+          description: Staff not found
 
   /admin/schools:
     get:

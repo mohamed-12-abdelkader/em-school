@@ -2,6 +2,8 @@ import type { Request, Response } from 'express';
 import * as schoolService from '../services/school.service';
 import { HttpError } from '../utils';
 import { parsePagination, parsePositiveIntParam } from '../utils/pagination';
+import { getAuthSchoolId } from '../utils/schoolContext';
+
 function parseOptionalQ(q: Record<string, unknown>): string | undefined {
   const raw = q.q;
   if (typeof raw !== 'string' || !raw.trim()) return undefined;
@@ -111,4 +113,41 @@ export async function regenerateRegistrationCode(req: Request, res: Response) {
 export async function getDashboard(_req: Request, res: Response) {
   const result = await schoolService.getAdminDashboard();
   res.json(result);
+}
+
+export async function getSchoolPortalDashboard(req: Request, res: Response) {
+  const schoolId = getAuthSchoolId(req);
+  const result = await schoolService.getSchoolPortalDashboard(schoolId);
+  res.json(result);
+}
+
+export async function getOwnSettings(req: Request, res: Response) {
+  const schoolId = getAuthSchoolId(req);
+  const school = await schoolService.getOwnSchoolSettings(schoolId);
+  res.json(school);
+}
+
+export async function updateOwnSettings(req: Request, res: Response) {
+  const schoolId = getAuthSchoolId(req);
+  const body = req.body as {
+    name?: string;
+    description?: string | null;
+    address?: string | null;
+    contactPhone?: string | null;
+    logo?: string;
+  };
+
+  if (!req.file && Object.keys(body).length === 0) {
+    throw new HttpError(400, 'At least one field is required');
+  }
+
+  const school = await schoolService.updateOwnSchoolSettings(schoolId, {
+    name: body.name,
+    description: body.description,
+    address: body.address,
+    contactPhone: body.contactPhone,
+    logoUrl: body.logo,
+    logoFilePath: req.file?.path,
+  });
+  res.json(school);
 }

@@ -98,6 +98,68 @@ export async function insertSchoolAdmin(
   return r.rows[0];
 }
 
+export interface StaffRow {
+  id: number;
+  email: string | null;
+  phone: string | null;
+  name: string;
+  role: AppRole;
+  school_id: number | null;
+  status: string | null;
+  created_at: Date;
+}
+
+const STAFF_COLS = `id, email, phone, name, role, school_id, status, created_at`;
+
+export async function phoneExists(phone: string): Promise<boolean> {
+  const r = await pool.query('SELECT 1 FROM users WHERE phone = $1 LIMIT 1', [phone]);
+  return Boolean(r.rowCount);
+}
+
+export async function insertStudentAffairsStaff(input: {
+  schoolId: number;
+  email: string;
+  phone: string;
+  passwordHash: string;
+  name: string;
+}): Promise<StaffRow> {
+  const r = await pool.query<StaffRow>(
+    `INSERT INTO users (email, phone, password, name, role, status, school_id)
+     VALUES ($1, $2, $3, $4, 'student_affairs', 'active', $5)
+     RETURNING ${STAFF_COLS}`,
+    [input.email, input.phone, input.passwordHash, input.name, input.schoolId],
+  );
+  return r.rows[0];
+}
+
+export async function findStaffByIdAndSchool(
+  staffId: number,
+  schoolId: number,
+): Promise<StaffRow | null> {
+  const r = await pool.query<StaffRow>(
+    `SELECT ${STAFF_COLS}
+     FROM users
+     WHERE id = $1 AND school_id = $2 AND role = 'student_affairs'`,
+    [staffId, schoolId],
+  );
+  return r.rows[0] ?? null;
+}
+
+export async function updateStaffStatus(
+  staffId: number,
+  schoolId: number,
+  status: 'active' | 'inactive',
+): Promise<StaffRow | null> {
+  const r = await pool.query<StaffRow>(
+    `UPDATE users
+     SET status = $1
+     WHERE id = $2 AND school_id = $3 AND role = 'student_affairs'
+     RETURNING ${STAFF_COLS}`,
+    [status, staffId, schoolId],
+  );
+  return r.rows[0] ?? null;
+}
+
 export async function findSchoolAdminBySchoolId(schoolId: number): Promise<SchoolAdminRow | null> {
   const r = await pool.query<SchoolAdminRow>(
     `SELECT ${SCHOOL_ADMIN_COLS}

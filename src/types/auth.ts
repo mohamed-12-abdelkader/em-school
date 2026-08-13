@@ -2,6 +2,7 @@ export type AppRole =
   | 'admin'
   | 'school'
   | 'school_admin'
+  | 'student_affairs'
   | 'student'
   | 'teacher'
   | 'manager'

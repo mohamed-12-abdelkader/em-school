@@ -1,6 +1,17 @@
 import pool from '../db/pool';
 import type { SchoolClassRow } from '../types/schoolAcademic';
 
+export async function countBySchool(schoolId: number): Promise<number> {
+  const r = await pool.query<{ c: string }>(
+    `SELECT COUNT(*)::text AS c
+     FROM school_classes c
+     JOIN school_grades g ON g.id = c.grade_id
+     WHERE g.school_id = $1`,
+    [schoolId],
+  );
+  return Number(r.rows[0]?.c ?? 0);
+}
+
 export async function countByGrade(gradeId: number, schoolId: number): Promise<number> {
   const r = await pool.query<{ c: string }>(
     `SELECT COUNT(*)::text AS c

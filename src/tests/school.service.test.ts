@@ -41,6 +41,22 @@ vi.mock('../models/user.model', () => ({
   findSchoolAdminBySchoolId: vi.fn(),
 }));
 
+vi.mock('../models/student.model', () => ({
+  countBySchool: vi.fn(),
+}));
+
+vi.mock('../models/schoolClass.model', () => ({
+  countBySchool: vi.fn(),
+}));
+
+vi.mock('../models/schoolTeacher.model', () => ({
+  countBySchool: vi.fn(),
+}));
+
+vi.mock('../models/fee.model', () => ({
+  sumPendingBySchool: vi.fn(),
+}));
+
 vi.mock('../models/registrationCode.model', () => ({
   codeExists: vi.fn(async () => false),
   insertActiveCode: vi.fn(),
@@ -51,6 +67,10 @@ vi.mock('../models/registrationCode.model', () => ({
 import * as schoolModel from '../models/school.model';
 import * as userModel from '../models/user.model';
 import * as registrationCodeModel from '../models/registrationCode.model';
+import * as studentModel from '../models/student.model';
+import * as schoolClassModel from '../models/schoolClass.model';
+import * as schoolTeacherModel from '../models/schoolTeacher.model';
+import * as feeModel from '../models/fee.model';
 import * as schoolService from '../services/school.service';
 
 describe('school.service (unit)', () => {
@@ -178,5 +198,57 @@ describe('school.service (unit)', () => {
       usersPerSchool: [{ schoolId: 1, schoolName: 'A', usersCount: 10 }],
       statusBreakdown: { active: 2, suspended: 1, deleted: 0 },
     });
+  });
+
+  it('getSchoolPortalDashboard returns own-school counts', async () => {
+    vi.mocked(schoolModel.findById).mockResolvedValue({
+      id: 7,
+      name: 'A',
+      description: null,
+      logo: null,
+      address: null,
+      contact_phone: null,
+      status: 'active',
+      created_at: new Date(),
+    });
+    vi.mocked(studentModel.countBySchool).mockResolvedValue(12);
+    vi.mocked(schoolClassModel.countBySchool).mockResolvedValue(4);
+    vi.mocked(schoolTeacherModel.countBySchool).mockResolvedValue(3);
+    vi.mocked(feeModel.sumPendingBySchool).mockResolvedValue(1500);
+
+    await expect(schoolService.getSchoolPortalDashboard(7)).resolves.toEqual({
+      studentsCount: 12,
+      classesCount: 4,
+      teachersCount: 3,
+      pendingFees: 1500,
+    });
+  });
+
+  it('updateOwnSchoolSettings updates the organization row only', async () => {
+    vi.mocked(schoolModel.findById).mockResolvedValue({
+      id: 7,
+      name: 'A',
+      description: null,
+      logo: 'https://cdn.example.com/old.png',
+      address: null,
+      contact_phone: null,
+      status: 'active',
+      created_at: new Date(),
+    });
+    vi.mocked(schoolModel.updateSchool).mockResolvedValue({
+      id: 7,
+      name: 'Renamed',
+      description: null,
+      logo: 'https://cdn.example.com/old.png',
+      address: null,
+      contact_phone: null,
+      status: 'active',
+      created_at: new Date(),
+    });
+
+    const result = await schoolService.updateOwnSchoolSettings(7, { name: 'Renamed' });
+    expect(result).toMatchObject({ id: 7, name: 'Renamed' });
+    expect('email' in result).toBe(false);
+    expect(userModel.insertSchoolAdmin).not.toHaveBeenCalled();
   });
 });

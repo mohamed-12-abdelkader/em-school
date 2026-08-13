@@ -41,10 +41,22 @@ import {
   updateTeacherAssignmentSchema,
 } from '../validators/teacherAssignment.validator';
 import { upsertGradeFeePlanSchema } from '../validators/gradeFeePlan.validator';
+import * as schoolController from '../controllers/school.controller';
+import { schoolSettingsSchema } from '../validators/school.validator';
+import { uploadSchoolLogo } from '../config/upload';
 
 const router = Router();
 
 router.use(authMiddleware(['school_admin', 'school']));
+
+router.get('/dashboard', asyncWrapper(schoolController.getSchoolPortalDashboard));
+router.get('/settings', asyncWrapper(schoolController.getOwnSettings));
+router.put(
+  '/settings',
+  uploadSchoolLogo.single('logo'),
+  validate(schoolSettingsSchema),
+  asyncWrapper(schoolController.updateOwnSettings),
+);
 
 // Academic years
 router.get('/academic-years', asyncWrapper(academicYearController.listAcademicYears));

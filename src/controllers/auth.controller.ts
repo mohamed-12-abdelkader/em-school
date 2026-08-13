@@ -5,8 +5,13 @@ import * as authService from '../services/auth.service';
 import { HttpError } from '../utils';
 
 export async function login(req: Request, res: Response) {
-  const { username, password } = req.body as { username: string; password: string };
-  const result = await authService.loginWithUsernamePassword(username, password, pool);
+  const { login, username, password } = req.body as {
+    login?: string;
+    username?: string;
+    password: string;
+  };
+  const identifier = (login ?? username ?? '').trim();
+  const result = await authService.loginWithUsernamePassword(identifier, password, pool);
   res.json(result);
 }
 

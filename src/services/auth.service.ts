@@ -14,7 +14,7 @@ export async function loginWithUsernamePassword(username: string, password: stri
     throw new HttpError(403, 'Account is deactivated.');
   }
 
-  if (user.role === 'school_admin' && user.school_id) {
+  if ((user.role === 'school_admin' || user.role === 'student_affairs') && user.school_id) {
     const school = await schoolModel.findById(user.school_id);
     if (!school || school.status === 'suspended' || school.status === 'deleted') {
       throw new HttpError(403, 'School account is deactivated.');
