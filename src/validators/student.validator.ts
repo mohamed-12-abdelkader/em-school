@@ -27,6 +27,38 @@ const nationalIdSchema = z
   ])
   .optional();
 
+const optionalWhatsappSchema = z
+  .union([phoneSchema, z.literal(''), z.null()])
+  .optional()
+  .transform((v) => (v === '' || v === undefined ? undefined : v));
+
+const STUDENT_BODY_ALIASES: Array<[string, string]> = [
+  ['first_name', 'firstName'],
+  ['last_name', 'lastName'],
+  ['national_id', 'nationalId'],
+  ['grade_id', 'gradeId'],
+  ['classroom_id', 'classroomId'],
+  ['class_id', 'classId'],
+  ['parent_phone', 'parentPhone'],
+  ['parent_whatsapp_number', 'parentWhatsappNumber'],
+  ['parent_name', 'parentName'],
+  ['parent_email', 'parentEmail'],
+  ['academic_year_id', 'academicYearId'],
+  ['date_of_birth', 'dateOfBirth'],
+  ['student_phone', 'studentPhone'],
+];
+
+/** Accept spec snake_case (first_name, grade_id, …) alongside existing camelCase. */
+export function normalizeStudentBody(raw: Record<string, unknown>) {
+  const out: Record<string, unknown> = { ...raw };
+  for (const [snake, camel] of STUDENT_BODY_ALIASES) {
+    if (out[camel] === undefined && out[snake] !== undefined) {
+      out[camel] = out[snake];
+    }
+  }
+  return out;
+}
+
 /**
  * إنشاء طالب — JSON أو multipart (بعد multer تُعامل الحقول كنصوص؛ لذا coerce للأرقام).
  * يدعم الأسماء الجديدة + توافق مع fullName / classId القديم.
@@ -58,6 +90,8 @@ export const createStudentEnrollmentSchema = z
     parentName: z.string().trim().min(1).max(255).optional(),
     parentFullName: z.string().trim().min(1).max(255).optional(),
     parentPhone: phoneSchema,
+    parentWhatsappNumber: optionalWhatsappSchema,
+    photo: z.union([z.string().trim().max(2000), z.literal(''), z.null()]).optional(),
     parentEmail: z.union([z.string().trim().email(), z.literal(''), z.null()]).optional(),
     relationship: relationshipSchema.optional(),
     parentRelation: z.enum(['father', 'mother', 'other']).optional(),
@@ -116,6 +150,7 @@ export const updateStudentSchema = z
     phone: z.union([phoneSchema, z.literal(''), z.null()]).optional(),
     parentName: z.string().trim().min(1).max(255).optional(),
     parentPhone: z.union([phoneSchema, z.null()]).optional(),
+    parentWhatsappNumber: optionalWhatsappSchema,
     parentEmail: z.union([z.string().email(), z.literal(''), z.null()]).optional(),
     relationship: relationshipSchema.optional(),
     status: statusSchema.optional(),

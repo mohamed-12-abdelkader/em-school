@@ -97,6 +97,7 @@ export async function listStudents(
     status?: StudentStatus;
     studentCode?: string;
     q?: string;
+    page?: number;
   },
 ) {
   const filters: studentModel.StudentListFilters = {};
@@ -121,6 +122,7 @@ export async function listStudents(
       limit: options.limit,
       skip: options.skip,
       hasMore: options.skip + rows.length < total,
+      ...(options.page !== undefined ? { page: options.page } : {}),
     },
   };
 }
@@ -170,6 +172,8 @@ export async function createStudent(
     parentName?: string;
     parentFullName?: string;
     parentPhone: string;
+    parentWhatsappNumber?: string | null;
+    photo?: string | null;
     parentEmail?: string | null;
     relationship?: StudentRelationship;
     parentRelation?: 'father' | 'mother' | 'other';
@@ -245,10 +249,14 @@ export async function createStudent(
   const status: StudentStatus = input.status ?? 'active';
   const parentPhoneDigits = digitsOnly(input.parentPhone);
 
+  const parentWhatsapp = input.parentWhatsappNumber?.trim() || null;
+
   let avatarUrl: string | null = null;
   let birthCertificateUrl: string | null = null;
   if (input.avatarLocalPath) {
     avatarUrl = await uploadToCloudinary(input.avatarLocalPath, 'student-documents');
+  } else if (input.photo?.trim()) {
+    avatarUrl = input.photo.trim();
   }
   if (input.birthCertificateLocalPath) {
     birthCertificateUrl = await uploadToCloudinary(
@@ -299,6 +307,7 @@ export async function createStudent(
         fullName: parentName,
         phone: input.parentPhone,
         email: parentEmail,
+        whatsappNumber: parentWhatsapp,
         relation: mapParentRelation(relationship),
         userId: parentUserId,
       });
@@ -313,6 +322,14 @@ export async function createStudent(
         reused: true,
         message: 'ولي الأمر مسجّل مسبقًا بهذا الرقم؛ استخدم نفس كود الدخول السابق',
       };
+      if (parentWhatsapp || parentName || parentEmail) {
+        parentRow =
+          (await parentModel.update(parentRow.id, schoolId, {
+            fullName: parentName !== 'ولي أمر' ? parentName : undefined,
+            email: parentEmail ?? undefined,
+            whatsappNumber: parentWhatsapp ?? undefined,
+          })) ?? parentRow;
+      }
     }
 
     const studentUserRes = await pool.query<{ id: number }>(
@@ -389,6 +406,7 @@ export async function createStudent(
         name: parentName,
         phone: input.parentPhone,
         email: parentEmail,
+        whatsappNumber: parentRow.whatsapp_number ?? parentWhatsapp,
         relationship,
         record: parentRow,
       },
@@ -449,6 +467,7 @@ export async function updateStudent(
     phone?: string | null;
     parentName?: string;
     parentPhone?: string | null;
+    parentWhatsappNumber?: string | null;
     parentEmail?: string | null;
     relationship?: StudentRelationship;
     status?: StudentStatus;
@@ -524,6 +543,15 @@ export async function updateStudent(
       status: patch.status,
     });
     if (!row) throw new HttpError(404, 'Student not found');
+
+    if (patch.parentWhatsappNumber !== undefined) {
+      const parent = await parentModel.findByStudentId(studentId, schoolId);
+      if (parent) {
+        await parentModel.update(parent.id, schoolId, {
+          whatsappNumber: patch.parentWhatsappNumber,
+        });
+      }
+    }
 
     if (fullName && row.user_id) {
       await pool.query(`UPDATE users SET name = $1 WHERE id = $2 AND role = 'student'`, [

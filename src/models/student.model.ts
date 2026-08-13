@@ -142,18 +142,23 @@ export async function findDetailByIdAndSchool(
       c_id: number | null;
       c_name: string | null;
       c_capacity: number | null;
+      parent_whatsapp: string | null;
     }
   >(
     `SELECT ${STUDENT_COLUMNS},
             ay.id AS ay_id, ay.name AS ay_name, ay.start_date::text AS ay_start,
             ay.end_date::text AS ay_end, ay.is_current AS ay_current,
             g.id AS g_id, g.name AS g_name, g.stage::text AS g_stage,
-            c.id AS c_id, c.name AS c_name, c.capacity AS c_capacity
+            c.id AS c_id, c.name AS c_name, c.capacity AS c_capacity,
+            p.whatsapp_number AS parent_whatsapp
      FROM students s
      LEFT JOIN academic_years ay ON ay.id = s.academic_year_id AND ay.school_id = s.school_id
      LEFT JOIN school_grades g ON g.id = s.grade_id AND g.school_id = s.school_id
      LEFT JOIN school_classes c ON c.id = s.class_id
-     WHERE s.id = $1 AND s.school_id = $2 AND s.deleted_at IS NULL`,
+     LEFT JOIN parent_students ps ON ps.student_id = s.id
+     LEFT JOIN parents p ON p.id = ps.parent_id AND p.school_id = s.school_id
+     WHERE s.id = $1 AND s.school_id = $2 AND s.deleted_at IS NULL
+     LIMIT 1`,
     [studentId, schoolId],
   );
   const row = r.rows[0];
@@ -208,6 +213,7 @@ export async function findDetailByIdAndSchool(
       name: row.parent_name,
       phone: row.parent_phone,
       email: row.parent_email,
+      whatsappNumber: row.parent_whatsapp ?? null,
       relationship: row.relationship,
     },
   };

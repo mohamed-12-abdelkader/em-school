@@ -37,18 +37,25 @@ function parseOptionalString(q: Record<string, unknown>, key: string): string | 
 export async function listStudents(req: Request, res: Response) {
   const schoolId = getAuthSchoolId(req);
   const query = req.query as Record<string, unknown>;
-  const { limit, skip } = parsePagination(query);
+  const { limit, skip, page } = parsePagination(query);
   const classId =
-    parseOptionalPositiveInt(query, 'classroomId') ?? parseOptionalPositiveInt(query, 'classId');
-  const gradeId = parseOptionalPositiveInt(query, 'gradeId');
-  const academicYearId = parseOptionalPositiveInt(query, 'academicYearId');
+    parseOptionalPositiveInt(query, 'classroomId') ??
+    parseOptionalPositiveInt(query, 'classroom_id') ??
+    parseOptionalPositiveInt(query, 'classId');
+  const gradeId =
+    parseOptionalPositiveInt(query, 'gradeId') ?? parseOptionalPositiveInt(query, 'grade_id');
+  const academicYearId =
+    parseOptionalPositiveInt(query, 'academicYearId') ??
+    parseOptionalPositiveInt(query, 'academic_year_id');
   const status = parseOptionalStatus(query);
-  const studentCode = parseOptionalString(query, 'studentCode');
-  const q = parseOptionalQ(query);
+  const studentCode =
+    parseOptionalString(query, 'studentCode') ?? parseOptionalString(query, 'student_code');
+  const q = parseOptionalQ(query) ?? parseOptionalString(query, 'search');
 
   const result = await studentService.listStudents(schoolId, {
     limit,
     skip,
+    page,
     classId,
     gradeId,
     academicYearId,
@@ -62,7 +69,7 @@ export async function listStudents(req: Request, res: Response) {
 export async function createStudent(req: Request, res: Response) {
   const schoolId = getAuthSchoolId(req);
   const files = req.files as Record<string, Express.Multer.File[] | undefined> | undefined;
-  const avatar = files?.avatar?.[0];
+  const avatar = files?.avatar?.[0] ?? files?.photo?.[0];
   const birthCertificate = files?.birthCertificate?.[0];
 
   const body = req.body as Record<string, unknown>;
@@ -85,6 +92,8 @@ export async function createStudent(req: Request, res: Response) {
     parentName: body.parentName as string | undefined,
     parentFullName: body.parentFullName as string | undefined,
     parentPhone: String(body.parentPhone),
+    parentWhatsappNumber: (body.parentWhatsappNumber as string | null | undefined) ?? null,
+    photo: (body.photo as string | null | undefined) ?? null,
     parentEmail: (body.parentEmail as string | null | undefined) ?? null,
     relationship: body.relationship as 'father' | 'mother' | 'guardian' | 'other' | undefined,
     parentRelation: body.parentRelation as 'father' | 'mother' | 'other' | undefined,

@@ -26,6 +26,7 @@ import * as academicYearController from '../controllers/academicYear.controller'
 import * as attendanceController from '../controllers/attendance.controller';
 import {
   createStudentEnrollmentSchema,
+  normalizeStudentBody,
   updateStudentSchema,
 } from '../validators/student.validator';
 import {
@@ -47,7 +48,61 @@ import { uploadSchoolLogo } from '../config/upload';
 
 const router = Router();
 
-router.use(authMiddleware(['school_admin', 'school']));
+const schoolAdminOnly = authMiddleware(['school_admin', 'school']);
+const studentsAccess = authMiddleware(['school_admin', 'school', 'student_affairs']);
+
+function normalizeStudentBodyMiddleware(
+  req: import('express').Request,
+  _res: import('express').Response,
+  next: import('express').NextFunction,
+) {
+  req.body = normalizeStudentBody((req.body ?? {}) as Record<string, unknown>);
+  next();
+}
+
+// Students (شؤون الطلاب) — school_admin + student_affairs
+router.get('/students', studentsAccess, asyncWrapper(studentController.listStudents));
+router.post(
+  '/students',
+  studentsAccess,
+  uploadStudentEnrollment.fields([
+    { name: 'avatar', maxCount: 1 },
+    { name: 'photo', maxCount: 1 },
+    { name: 'birthCertificate', maxCount: 1 },
+  ]),
+  normalizeStudentBodyMiddleware,
+  validate(createStudentEnrollmentSchema),
+  asyncWrapper(studentController.createStudent),
+);
+router.get('/students/:studentId/qr', studentsAccess, asyncWrapper(studentController.getStudentQr));
+router.get(
+  '/students/:studentId/attendance-days',
+  studentsAccess,
+  asyncWrapper(attendanceController.getStudentAttendanceDays),
+);
+router.get('/students/:studentId', studentsAccess, asyncWrapper(studentController.getStudent));
+router.put(
+  '/students/:studentId',
+  studentsAccess,
+  normalizeStudentBodyMiddleware,
+  validate(updateStudentSchema),
+  asyncWrapper(studentController.updateStudent),
+);
+router.patch(
+  '/students/:studentId',
+  studentsAccess,
+  normalizeStudentBodyMiddleware,
+  validate(updateStudentSchema),
+  asyncWrapper(studentController.updateStudent),
+);
+router.delete(
+  '/students/:studentId',
+  studentsAccess,
+  asyncWrapper(studentController.deleteStudent),
+);
+
+// Rest of school portal — school_admin only (fees stay exclusive)
+router.use(schoolAdminOnly);
 
 router.get('/dashboard', asyncWrapper(schoolController.getSchoolPortalDashboard));
 router.get('/settings', asyncWrapper(schoolController.getOwnSettings));
@@ -73,35 +128,7 @@ router.put(
 );
 router.delete('/academic-years/:yearId', asyncWrapper(academicYearController.deleteAcademicYear));
 
-// Students (شؤون الطلاب)
-router.get('/students', asyncWrapper(studentController.listStudents));
-router.post(
-  '/students',
-  uploadStudentEnrollment.fields([
-    { name: 'avatar', maxCount: 1 },
-    { name: 'birthCertificate', maxCount: 1 },
-  ]),
-  validate(createStudentEnrollmentSchema),
-  asyncWrapper(studentController.createStudent),
-);
 router.get('/students/:studentId/fees', asyncWrapper(studentFeeController.getStudentFees));
-router.get('/students/:studentId/qr', asyncWrapper(studentController.getStudentQr));
-router.get(
-  '/students/:studentId/attendance-days',
-  asyncWrapper(attendanceController.getStudentAttendanceDays),
-);
-router.get('/students/:studentId', asyncWrapper(studentController.getStudent));
-router.put(
-  '/students/:studentId',
-  validate(updateStudentSchema),
-  asyncWrapper(studentController.updateStudent),
-);
-router.patch(
-  '/students/:studentId',
-  validate(updateStudentSchema),
-  asyncWrapper(studentController.updateStudent),
-);
-router.delete('/students/:studentId', asyncWrapper(studentController.deleteStudent));
 
 router.post(
   '/attendance/scan',

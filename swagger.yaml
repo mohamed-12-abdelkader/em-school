@@ -485,13 +485,19 @@ components:
       type: object
       required: [gradeId, parentPhone]
       description: |
-        JSON or multipart. Require firstName+lastName OR fullName;
-        classroomId OR classId; birthDate/dateOfBirth OR nationalId; gender OR nationalId.
-        Optional files: `avatar`, `birthCertificate`.
+        JSON or multipart. Snake_case aliases accepted (`first_name`, `grade_id`, `classroom_id`,
+        `parent_phone`, `parent_whatsapp_number`, `national_id`).
+        Require firstName+lastName OR fullName; classroomId OR classId;
+        birthDate/dateOfBirth OR nationalId; gender OR nationalId.
+        Optional files: `avatar`/`photo`, `birthCertificate`.
       properties:
         firstName:
           type: string
+        first_name:
+          type: string
         lastName:
+          type: string
+        last_name:
           type: string
         fullName:
           type: string
@@ -520,7 +526,11 @@ components:
           type: integer
         gradeId:
           type: integer
+        grade_id:
+          type: integer
         classroomId:
+          type: integer
+        classroom_id:
           type: integer
         classId:
           type: integer
@@ -530,6 +540,16 @@ components:
           type: string
         parentPhone:
           type: string
+        parent_phone:
+          type: string
+        parentWhatsappNumber:
+          type: string
+          description: WhatsApp for notifications; separate from parentPhone login
+        parent_whatsapp_number:
+          type: string
+        photo:
+          type: string
+          description: Photo URL, or upload file field `photo` / `avatar`
         parentEmail:
           type: string
           nullable: true
@@ -561,6 +581,8 @@ components:
           type: integer
         classroomId:
           type: integer
+        classroom_id:
+          type: integer
         classId:
           type: integer
         firstName:
@@ -570,6 +592,9 @@ components:
         fullName:
           type: string
         nationalId:
+          type: string
+          nullable: true
+        parentWhatsappNumber:
           type: string
           nullable: true
         birthDate:
@@ -1356,13 +1381,29 @@ paths:
     get:
       tags: [School — Students]
       summary: List students
+      description: School Admin and Student Affairs. Query aliases `search`, `grade_id`, `classroom_id`, `page`.
       security:
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Skip'
         - $ref: '#/components/parameters/SearchQ'
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Alias of q
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+          description: 1-based page; used when skip is omitted
         - name: classroomId
+          in: query
+          schema:
+            type: integer
+        - name: classroom_id
           in: query
           schema:
             type: integer
@@ -1372,6 +1413,10 @@ paths:
             type: integer
           description: Alias of classroomId
         - name: gradeId
+          in: query
+          schema:
+            type: integer
+        - name: grade_id
           in: query
           schema:
             type: integer
@@ -1394,6 +1439,7 @@ paths:
     post:
       tags: [School — Students]
       summary: Enroll / create student
+      description: School Admin and Student Affairs. Parent auto-linked by phone; grade fee plan auto-applied.
       security:
         - bearerAuth: []
       requestBody:

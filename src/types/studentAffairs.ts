@@ -63,6 +63,7 @@ export interface StudentDetailRelations {
     name: string;
     phone: string | null;
     email: string | null;
+    whatsappNumber: string | null;
     relationship: StudentRelationship;
   };
 }
@@ -73,6 +74,7 @@ export interface ParentRow {
   full_name: string;
   phone: string;
   email: string | null;
+  whatsapp_number: string | null;
   relation: 'father' | 'mother' | 'other';
   user_id: number | null;
   created_at: Date;

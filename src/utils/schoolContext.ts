@@ -8,9 +8,9 @@ export function getAuthSchoolId(req: Request): number {
     throw new HttpError(401, 'Unauthorized');
   }
 
-  if (user.role === 'school_admin') {
+  if (user.role === 'school_admin' || user.role === 'student_affairs') {
     if (!user.schoolId) {
-      throw new HttpError(403, 'School admin is not linked to a school');
+      throw new HttpError(403, 'User is not linked to a school');
     }
     return user.schoolId;
   }
