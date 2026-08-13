@@ -45,6 +45,13 @@ import { upsertGradeFeePlanSchema } from '../validators/gradeFeePlan.validator';
 import * as schoolController from '../controllers/school.controller';
 import { schoolSettingsSchema } from '../validators/school.validator';
 import { uploadSchoolLogo } from '../config/upload';
+import * as payrollController from '../controllers/payroll.controller';
+import {
+  createSalaryAdjustmentSchema,
+  createSalaryPaymentSchema,
+  normalizePayrollBody,
+  upsertSalarySchema,
+} from '../validators/payroll.validator';
 
 const router = Router();
 
@@ -57,6 +64,15 @@ function normalizeStudentBodyMiddleware(
   next: import('express').NextFunction,
 ) {
   req.body = normalizeStudentBody((req.body ?? {}) as Record<string, unknown>);
+  next();
+}
+
+function normalizePayrollBodyMiddleware(
+  req: import('express').Request,
+  _res: import('express').Response,
+  next: import('express').NextFunction,
+) {
+  req.body = normalizePayrollBody((req.body ?? {}) as Record<string, unknown>);
   next();
 }
 
@@ -129,6 +145,27 @@ router.put(
 router.delete('/academic-years/:yearId', asyncWrapper(academicYearController.deleteAcademicYear));
 
 router.get('/students/:studentId/fees', asyncWrapper(studentFeeController.getStudentFees));
+
+// Payroll (School Admin only — cash vouchers, insert-only payments)
+router.post(
+  '/staff/:staffId/salary',
+  normalizePayrollBodyMiddleware,
+  validate(upsertSalarySchema),
+  asyncWrapper(payrollController.upsertSalary),
+);
+router.post(
+  '/staff/:staffId/salary-payments',
+  normalizePayrollBodyMiddleware,
+  validate(createSalaryPaymentSchema),
+  asyncWrapper(payrollController.createSalaryPayment),
+);
+router.get('/staff/:staffId/salary-payments', asyncWrapper(payrollController.listSalaryPayments));
+router.post(
+  '/staff/:staffId/salary-adjustments',
+  normalizePayrollBodyMiddleware,
+  validate(createSalaryAdjustmentSchema),
+  asyncWrapper(payrollController.createSalaryAdjustment),
+);
 
 router.post(
   '/attendance/scan',

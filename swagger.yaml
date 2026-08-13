@@ -24,6 +24,7 @@ tags:
   - name: Admin
   - name: School — Portal
   - name: School Admin — Staff
+  - name: School — Payroll
   - name: School — Academic Years
   - name: School — Students
   - name: School — Attendance
@@ -123,6 +124,13 @@ components:
       name: installmentId
       in: path
       required: true
+      schema:
+        type: integer
+    StaffId:
+      name: staffId
+      in: path
+      required: true
+      description: Student Affairs user id, teacher user id, or school_teachers.id
       schema:
         type: integer
 
@@ -450,6 +458,53 @@ components:
         status:
           type: string
           enum: [active, inactive]
+
+    UpsertSalaryRequest:
+      type: object
+      required: [basicSalary]
+      properties:
+        basicSalary:
+          type: number
+          minimum: 0
+
+    SalaryPaymentCreate:
+      type: object
+      required: [amount, paidAt]
+      properties:
+        amount:
+          type: number
+          minimum: 0.01
+        paidAt:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+        note:
+          type: string
+
+    SalaryPayment:
+      type: object
+      properties:
+        id:
+          type: integer
+        amount:
+          type: number
+        paidAt:
+          type: string
+        note:
+          type: string
+          nullable: true
+
+    SalaryAdjustmentCreate:
+      type: object
+      required: [type, amount]
+      properties:
+        type:
+          type: string
+          enum: [bonus, deduction]
+        amount:
+          type: number
+          minimum: 0.01
+        note:
+          type: string
 
     AcademicYearCreate:
       type: object
@@ -1076,6 +1131,95 @@ paths:
                     enum: [active, inactive]
         '404':
           description: Staff not found
+
+  /school/staff/{staffId}/salary:
+    post:
+      tags: [School — Payroll]
+      summary: Set or update staff basic salary
+      description: School Admin only. `staffId` is a Student Affairs user, teacher user, or teacher row id.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/StaffId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertSalaryRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  staffId:
+                    type: integer
+                  basicSalary:
+                    type: number
+        '404':
+          description: Staff not found
+
+  /school/staff/{staffId}/salary-payments:
+    get:
+      tags: [School — Payroll]
+      summary: List cash salary payments (history)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/StaffId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SalaryPayment'
+    post:
+      tags: [School — Payroll]
+      summary: Record a cash salary payment (insert-only voucher)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/StaffId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalaryPaymentCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalaryPayment'
+
+  /school/staff/{staffId}/salary-adjustments:
+    post:
+      tags: [School — Payroll]
+      summary: Record a bonus or deduction
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/StaffId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalaryAdjustmentCreate'
+      responses:
+        '201':
+          description: Created
 
   /admin/schools:
     get:

@@ -113,10 +113,10 @@ export async function createTeacher(
     await pool.query('BEGIN');
 
     const userRes = await pool.query<{ id: number }>(
-      `INSERT INTO users (email, phone, password, name, role, status, username, password_change_required)
-       VALUES ($1, $2, $3, $4, 'teacher', 'active', $5, TRUE)
+      `INSERT INTO users (email, phone, password, name, role, status, username, password_change_required, school_id)
+       VALUES ($1, $2, $3, $4, 'teacher', 'active', $5, TRUE, $6)
        RETURNING id`,
-      [loginEmail, input.phone, passwordHash, fullName, employeeCode],
+      [loginEmail, input.phone, passwordHash, fullName, employeeCode, schoolId],
     );
     const userId = userRes.rows[0]?.id;
     if (!userId) throw new HttpError(500, 'فشل إنشاء حساب المدرس');
