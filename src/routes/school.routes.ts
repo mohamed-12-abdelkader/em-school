@@ -33,7 +33,12 @@ import {
   createAcademicYearSchema,
   updateAcademicYearSchema,
 } from '../validators/academicYear.validator';
-import { attendanceScanSchema } from '../validators/attendance.validator';
+import {
+  attendanceBatchSchema,
+  attendanceScanSchema,
+  normalizeAttendanceBatchBody,
+  normalizeAttendanceScanBody,
+} from '../validators/attendance.validator';
 import { uploadStudentEnrollment } from '../config/uploadStudent';
 import * as gradeFeePlanController from '../controllers/gradeFeePlan.controller';
 import * as studentFeeController from '../controllers/studentFee.controller';
@@ -173,9 +178,23 @@ router.post(
 
 router.post(
   '/attendance/scan',
+  (req, _res, next) => {
+    req.body = normalizeAttendanceScanBody((req.body ?? {}) as Record<string, unknown>);
+    next();
+  },
   validate(attendanceScanSchema),
   asyncWrapper(attendanceController.scanAttendance),
 );
+router.post(
+  '/attendance/batch',
+  (req, _res, next) => {
+    req.body = normalizeAttendanceBatchBody((req.body ?? {}) as Record<string, unknown>);
+    next();
+  },
+  validate(attendanceBatchSchema),
+  asyncWrapper(attendanceController.batchMark),
+);
+router.get('/attendance/reports', asyncWrapper(attendanceController.getReports));
 router.get('/attendance', asyncWrapper(attendanceController.listAttendance));
 
 router.get('/installments/overdue', asyncWrapper(studentFeeController.listOverdue));

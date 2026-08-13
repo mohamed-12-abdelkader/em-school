@@ -1,10 +1,13 @@
 import dayjs from 'dayjs';
 import * as attendanceModel from '../models/attendance.model';
 import * as studentModel from '../models/student.model';
+import * as schoolClassModel from '../models/schoolClass.model';
+import * as whatsappService from './whatsapp.service';
 import { parseStudentQrPayload } from '../utils/studentQr';
 import { HttpError } from '../utils';
+import type { AttendanceStatus } from '../types/attendance';
 
-export async function recordScan(schoolUserId: number, rawQr: string) {
+export async function recordScan(schoolId: number, rawQr: string) {
   let payload: { schoolId: number; studentId: string };
   try {
     payload = parseStudentQrPayload(rawQr);
@@ -12,14 +15,11 @@ export async function recordScan(schoolUserId: number, rawQr: string) {
     throw new HttpError(400, 'رمز QR غير صالح');
   }
 
-  if (payload.schoolId !== schoolUserId) {
+  if (payload.schoolId !== schoolId) {
     throw new HttpError(403, 'هذا الرمز لا يخص مدرستك');
   }
 
-  const student = await studentModel.findBySchoolAndPublicStudentId(
-    schoolUserId,
-    payload.studentId,
-  );
+  const student = await studentModel.findBySchoolAndPublicStudentId(schoolId, payload.studentId);
   if (!student) {
     throw new HttpError(404, 'الطالب غير موجود');
   }
@@ -27,26 +27,32 @@ export async function recordScan(schoolUserId: number, rawQr: string) {
   const dateStr = dayjs().format('YYYY-MM-DD');
   const timeStr = dayjs().format('HH:mm:ss');
 
-  const { row, isNew } = await attendanceModel.upsertPresent({
-    schoolId: schoolUserId,
-    studentInternalId: student.id,
-    studentPublicId: student.student_id,
-    date: dateStr,
-    time: timeStr,
-    status: 'present',
-  });
+  const existing = await attendanceModel.findBySchoolStudentDate(schoolId, student.id, dateStr);
+  if (existing) {
+    throw new HttpError(409, 'Already marked today');
+  }
 
-  return {
-    attendance: {
-      id: row.id,
-      student_id: row.student_id,
-      student_name: student.full_name,
+  try {
+    const row = await attendanceModel.insertAttendance({
+      schoolId,
+      studentInternalId: student.id,
+      studentPublicId: student.student_id,
+      date: dateStr,
+      time: timeStr,
+      status: 'present',
+    });
+    return {
+      studentId: student.id,
       date: row.attendance_date,
-      time: row.attendance_time,
-      status: row.status,
-    },
-    alreadyCheckedInToday: !isNew,
-  };
+      status: 'present' as const,
+    };
+  } catch (e: unknown) {
+    const err = e as { code?: string };
+    if (err.code === '23505') {
+      throw new HttpError(409, 'Already marked today');
+    }
+    throw e;
+  }
 }
 
 export async function listSchoolAttendance(
@@ -54,7 +60,9 @@ export async function listSchoolAttendance(
   options: {
     from?: string;
     to?: string;
+    date?: string;
     studentInternalId?: number;
+    classId?: number;
     limit: number;
     skip: number;
   },
@@ -64,14 +72,10 @@ export async function listSchoolAttendance(
     attendanceModel.countBySchool(schoolId, options),
   ]);
   return {
-    records: rows.map((r) => ({
-      id: r.id,
-      student_id: r.student_id,
-      student_internal_id: r.student_internal_id,
+    data: rows.map((r) => ({
+      studentId: r.student_internal_id,
       date: r.attendance_date,
-      time: r.attendance_time,
       status: r.status,
-      created_at: r.created_at,
     })),
     pagination: {
       total,
@@ -88,38 +92,26 @@ export async function listParentAttendance(
     studentInternalId?: number;
     from?: string;
     to?: string;
-    limit: number;
-    skip: number;
   },
 ) {
-  const [rows, total] = await Promise.all([
-    attendanceModel.listForParentUser(parentUserId, options),
-    attendanceModel.countForParentUser(parentUserId, {
-      studentInternalId: options.studentInternalId,
-      from: options.from,
-      to: options.to,
-    }),
-  ]);
+  const rows = await attendanceModel.listChildrenAttendanceForParent(parentUserId, options);
+  const byStudent = new Map<
+    number,
+    { studentId: number; records: { date: string; status: string }[] }
+  >();
 
-  return {
-    records: rows.map((r) => ({
-      id: r.id,
-      student_id: r.student_id,
-      student_internal_id: r.student_internal_id,
-      student_name: r.student_full_name,
-      grade: r.grade,
-      date: r.attendance_date,
-      time: r.attendance_time,
-      status: r.status,
-      created_at: r.created_at,
-    })),
-    pagination: {
-      total,
-      limit: options.limit,
-      skip: options.skip,
-      hasMore: options.skip + rows.length < total,
-    },
-  };
+  for (const row of rows) {
+    let child = byStudent.get(row.student_id);
+    if (!child) {
+      child = { studentId: row.student_id, records: [] };
+      byStudent.set(row.student_id, child);
+    }
+    if (row.date && row.status) {
+      child.records.push({ date: row.date, status: row.status });
+    }
+  }
+
+  return { children: [...byStudent.values()] };
 }
 
 export async function countPresentDaysForStudent(
@@ -137,5 +129,72 @@ export async function countPresentDaysForStudent(
     present_days: days,
     from: from ?? null,
     to: to ?? null,
+  };
+}
+
+export async function markBatch(
+  schoolId: number,
+  input: {
+    classroomId: number;
+    date: string;
+    records: { studentId: number; status: 'present' | 'absent' }[];
+  },
+) {
+  const classroom = await schoolClassModel.findByIdAndSchool(input.classroomId, schoolId);
+  if (!classroom) {
+    throw new HttpError(404, 'Classroom not found');
+  }
+
+  const timeStr = dayjs().format('HH:mm:ss');
+  let marked = 0;
+
+  for (const rec of input.records) {
+    const student = await studentModel.findByIdAndSchool(rec.studentId, schoolId);
+    if (!student || student.class_id !== input.classroomId) {
+      throw new HttpError(400, `Student ${rec.studentId} is not in this classroom`);
+    }
+
+    const { previousStatus } = await attendanceModel.upsertStatus({
+      schoolId,
+      studentInternalId: student.id,
+      studentPublicId: student.student_id,
+      date: input.date,
+      time: timeStr,
+      status: rec.status as AttendanceStatus,
+    });
+    marked += 1;
+
+    if (rec.status === 'absent' && previousStatus !== 'absent') {
+      await whatsappService.notifyStudentAbsent({
+        schoolId,
+        studentId: student.id,
+        studentName: student.full_name,
+        date: input.date,
+      });
+    }
+  }
+
+  return { marked };
+}
+
+export async function attendanceReports(
+  schoolId: number,
+  options: { classroomId: number; from?: string; to?: string },
+) {
+  const classroom = await schoolClassModel.findByIdAndSchool(options.classroomId, schoolId);
+  if (!classroom) {
+    throw new HttpError(404, 'Classroom not found');
+  }
+
+  const rows = await attendanceModel.presentPercentByClassroom(schoolId, options.classroomId, {
+    from: options.from,
+    to: options.to,
+  });
+
+  return {
+    data: rows.map((r) => ({
+      studentId: r.student_id,
+      presentPercent: Number(r.present_percent),
+    })),
   };
 }

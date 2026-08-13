@@ -89,6 +89,13 @@ export const config = cleanEnv(process.env, {
 
   // CDN
   CLOUDINARY_URL: str({ default: 'cloudinary://dummy:dummy@dummy' }),
+
+  // Meta WhatsApp Cloud API (absence alerts). Empty = hook is a no-op.
+  WHATSAPP_TOKEN: str({ default: '' }),
+  WHATSAPP_PHONE_NUMBER_ID: str({ default: '' }),
+  WHATSAPP_API_VERSION: str({ default: 'v21.0' }),
+  WHATSAPP_TEMPLATE_NAME: str({ default: '' }),
+  WHATSAPP_TEMPLATE_LANG: str({ default: 'ar' }),
 });
 
 // Security

@@ -685,11 +685,34 @@ components:
 
     AttendanceScanRequest:
       type: object
-      required: [raw]
+      required: [qr_code]
       properties:
-        raw:
+        qr_code:
           type: string
           description: Raw QR payload scanned from student QR
+        raw:
+          type: string
+          description: Legacy alias for qr_code
+    AttendanceBatchRequest:
+      type: object
+      required: [classroom_id, date, records]
+      properties:
+        classroom_id:
+          type: integer
+        date:
+          type: string
+          example: '2026-08-13'
+        records:
+          type: array
+          items:
+            type: object
+            required: [studentId, status]
+            properties:
+              studentId:
+                type: integer
+              status:
+                type: string
+                enum: [present, absent]
 
     GradeCreate:
       type: object
@@ -1764,8 +1787,50 @@ paths:
             schema:
               $ref: '#/components/schemas/AttendanceScanRequest'
       responses:
-        '201':
-          description: Recorded
+        '200':
+          description: '{ studentId, date, status: present }'
+        '409':
+          description: '{ error: Already marked today }'
+
+  /school/attendance/batch:
+    post:
+      tags: [School — Attendance]
+      summary: Manual batch mark present/absent
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttendanceBatchRequest'
+      responses:
+        '200':
+          description: '{ marked: number }'
+
+  /school/attendance/reports:
+    get:
+      tags: [School — Attendance]
+      summary: Attendance present-percent analytics
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: classroom_id
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: from
+          in: query
+          schema:
+            type: string
+        - name: to
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: '{ data: [{ studentId, presentPercent }] }'
 
   /school/attendance:
     get:
@@ -1774,6 +1839,18 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - name: class_id
+          in: query
+          schema:
+            type: integer
+        - name: date
+          in: query
+          schema:
+            type: string
+        - name: student_id
+          in: query
+          schema:
+            type: integer
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Skip'
         - name: from
@@ -1784,13 +1861,9 @@ paths:
           in: query
           schema:
             type: string
-        - name: studentId
-          in: query
-          schema:
-            type: integer
       responses:
         '200':
-          description: OK
+          description: '{ data: [{ studentId, date, status }] }'
 
   /school/installments/overdue:
     get:
@@ -2431,12 +2504,10 @@ paths:
   /parent/attendance:
     get:
       tags: [Parent]
-      summary: List attendance for parent's children
+      summary: Attendance records grouped by child
       security:
         - bearerAuth: []
       parameters:
-        - $ref: '#/components/parameters/Limit'
-        - $ref: '#/components/parameters/Skip'
         - name: studentId
           in: query
           schema:
@@ -2451,7 +2522,7 @@ paths:
             type: string
       responses:
         '200':
-          description: OK
+          description: '{ children: [{ studentId, records: [{ date, status }] }] }'
         '403':
           description: Parent role required
 
