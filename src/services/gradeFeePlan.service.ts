@@ -1,7 +1,9 @@
+import * as academicYearModel from '../models/academicYear.model';
 import * as feeModel from '../models/fee.model';
 import * as gradeFeePlanModel from '../models/gradeFeePlan.model';
 import * as schoolGradeModel from '../models/schoolGrade.model';
 import * as studentModel from '../models/student.model';
+import { splitEqualInstallments, toFeePlanResource } from '../resources/gradeFeePlan.resource';
 import { HttpError } from '../utils';
 
 function roundMoney(n: number): string {
@@ -14,34 +16,41 @@ export async function getGradeFeePlan(schoolId: number, gradeId: number) {
 
   const plan = await gradeFeePlanModel.findPlanByGrade(schoolId, gradeId);
   if (!plan) {
-    return {
-      grade,
-      plan: null,
-      installments: [] as Awaited<ReturnType<typeof gradeFeePlanModel.listPlanInstallments>>,
-    };
+    return toFeePlanResource(gradeId, null, []);
   }
   const installments = await gradeFeePlanModel.listPlanInstallments(plan.id);
-  return { grade, plan, installments };
+  return toFeePlanResource(gradeId, plan, installments);
 }
 
 export async function saveGradeFeePlan(
   schoolId: number,
   gradeId: number,
-  input: { totalAmount: number; installments: { dueDate: string; amount: number }[] },
+  input: {
+    totalAmount: number;
+    installmentsCount?: number;
+    installments?: { dueDate: string; amount: number }[];
+  },
 ) {
   const grade = await schoolGradeModel.findByIdAndSchool(gradeId, schoolId);
   if (!grade) throw new HttpError(404, 'الصف غير موجود');
 
-  if (!input.installments.length) {
-    throw new HttpError(400, 'يجب تحديد قسط واحد على الأقل');
+  let schedule = input.installments ?? [];
+  if (!schedule.length) {
+    const count = input.installmentsCount;
+    if (!count) {
+      throw new HttpError(400, 'يجب تحديد قسط واحد على الأقل');
+    }
+    const year = await academicYearModel.findCurrentBySchool(schoolId);
+    const firstDue = year?.start_date ?? new Date().toISOString().slice(0, 10);
+    schedule = splitEqualInstallments(input.totalAmount, count, firstDue);
   }
 
-  const sum = input.installments.reduce((a, x) => a + x.amount, 0);
+  const sum = schedule.reduce((a, x) => a + x.amount, 0);
   if (Math.abs(sum - input.totalAmount) > 0.02) {
     throw new HttpError(400, 'مجموع الأقساط يجب أن يساوي إجمالي المصروفات');
   }
 
-  const rows = input.installments.map((x, idx) => ({
+  const rows = schedule.map((x, idx) => ({
     installmentNumber: idx + 1,
     dueDate: x.dueDate,
     amount: roundMoney(x.amount),
@@ -74,9 +83,7 @@ export async function saveGradeFeePlan(
   }
 
   return {
-    grade,
-    plan,
-    installments: schedules,
+    ...toFeePlanResource(gradeId, plan, schedules),
     application: {
       studentsInGrade: studentIds.length,
       feesCreatedOrUpdated: applied,

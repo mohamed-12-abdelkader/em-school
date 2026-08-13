@@ -30,8 +30,29 @@ export interface InstallmentRow {
   id: number;
   fee_id: number;
   amount: string;
+  paid_amount: string;
   due_date: string;
   status: 'paid' | 'unpaid';
   paid_at: Date | null;
   created_at: Date;
+}
+
+export interface PaymentReceiptRow {
+  id: number;
+  school_id: number;
+  installment_id: number;
+  student_id: number;
+  amount: string;
+  paid_at: string;
+  received_by: number;
+  created_at: Date;
+}
+
+export interface OverdueInstallmentRow {
+  student_id: number;
+  student_name: string;
+  installment_id: number;
+  amount: string;
+  remaining: string;
+  due_date: string;
 }

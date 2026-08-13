@@ -15,7 +15,8 @@ export async function saveGradeFeePlan(req: Request, res: Response) {
   const gradeId = parsePositiveIntParam(req.params.gradeId, 'gradeId');
   const body = req.body as {
     totalAmount: number;
-    installments: { dueDate: string; amount: number }[];
+    installmentsCount?: number;
+    installments?: { dueDate: string; amount: number }[];
   };
   const result = await gradeFeePlanService.saveGradeFeePlan(schoolId, gradeId, body);
   res.json(result);

@@ -41,7 +41,11 @@ import {
   createTeacherAssignmentSchema,
   updateTeacherAssignmentSchema,
 } from '../validators/teacherAssignment.validator';
-import { upsertGradeFeePlanSchema } from '../validators/gradeFeePlan.validator';
+import {
+  normalizeFeePlanBody,
+  upsertGradeFeePlanSchema,
+} from '../validators/gradeFeePlan.validator';
+import { payInstallmentSchema } from '../validators/installment.validator';
 import * as schoolController from '../controllers/school.controller';
 import { schoolSettingsSchema } from '../validators/school.validator';
 import { uploadSchoolLogo } from '../config/upload';
@@ -174,7 +178,12 @@ router.post(
 );
 router.get('/attendance', asyncWrapper(attendanceController.listAttendance));
 
-router.post('/installments/:installmentId/pay', asyncWrapper(studentFeeController.payInstallment));
+router.get('/installments/overdue', asyncWrapper(studentFeeController.listOverdue));
+router.post(
+  '/installments/:installmentId/pay',
+  validate(payInstallmentSchema),
+  asyncWrapper(studentFeeController.payInstallment),
+);
 
 router.get('/grades', asyncWrapper(schoolGradeController.listGrades));
 router.post(
@@ -187,6 +196,10 @@ router.post(
 router.get('/grades/:gradeId/fee-plan', asyncWrapper(gradeFeePlanController.getGradeFeePlan));
 router.put(
   '/grades/:gradeId/fee-plan',
+  (req, _res, next) => {
+    req.body = normalizeFeePlanBody((req.body ?? {}) as Record<string, unknown>);
+    next();
+  },
   validate(upsertGradeFeePlanSchema),
   asyncWrapper(gradeFeePlanController.saveGradeFeePlan),
 );
